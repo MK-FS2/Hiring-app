@@ -1,6 +1,6 @@
 import { Body, Controller, InternalServerErrorException, Post, UseInterceptors } from '@nestjs/common';
 import { AuthService } from './auth.service';
-import {  MangerDTO } from './dto';
+import {  HRDTO, MangerDTO } from './dto';
 import { AuthFactory } from './factory';
 import { FilesInterceptor } from '@Shared/Interceptors';
 import { FileTypes } from '@Shared/Helpers';
@@ -30,6 +30,14 @@ if(!Result) throw new InternalServerErrorException("Internal Server Error")
 return {message:"Successfully signed up",status:200}
 }
 
+@Post("signup/hr")
+async SignUpHr(@Body()hrDTO:HRDTO,@FileData({optional:true,fieldname:"coverPic"})coverimage:Express.Multer.File,@FileData({optional:false,fieldname:"profilePic"})profilePic:Express.Multer.File)
+{
+  const hr =  this.authFactory.CreateHR(hrDTO)
+  const Result = await this.authService.SignUpHR(hr,coverimage,profilePic)
+  if(!Result) throw new InternalServerErrorException("Internal Server Error")
+  return {message:"Successfully signed up",status:200}
 
+}
 
 }

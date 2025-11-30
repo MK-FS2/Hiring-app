@@ -1,8 +1,9 @@
 import { Injectable } from "@nestjs/common";
-import { MangerDTO } from "../dto";
-import { MangerEntity } from "../entity/manger.entity";
+import { HRDTO, MangerDTO } from "../dto";
 import { OTPTypes, UserAgent } from "@Shared/Enums";
 import {nanoid} from "nanoid"
+import { HREntity, MangerEntity } from "../entity";
+
 
 @Injectable()
 export class AuthFactory 
@@ -23,6 +24,19 @@ export class AuthFactory
      return manger
     }
 
-
+    CreateHR(hrDTO:HRDTO)
+    {
+    const hr = new HREntity()
+     hr.firstName = hrDTO.firstName
+     hr.lastName = hrDTO.lastName
+     hr.email = hrDTO.email
+     hr.password = hrDTO.password
+     hr.phoneNumber = hrDTO.phoneNumber
+     hr.gender = hrDTO.gender
+     hr.dateofbirth = hrDTO.dateofbirth
+     hr.provider = UserAgent.System
+     hr.OTP=[{OTP:nanoid(5),OTPtype: OTPTypes.ConfirmEmail,ExpiresAt: new Date(Date.now()+10*60*1000)}];
+     return hr
+    }
 
 }

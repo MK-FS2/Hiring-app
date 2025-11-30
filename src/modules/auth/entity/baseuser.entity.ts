@@ -1,3 +1,4 @@
+import { OTPSchema } from "@Models/Users";
 import { Genders, UserAgent } from "@Shared/Enums";
 
 
@@ -12,4 +13,5 @@ email: string;
 gender: Genders;
 dateofbirth: Date;
 provider:UserAgent
+OTP:OTPSchema[]
 }
