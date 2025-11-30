@@ -1,6 +1,8 @@
 import { Genders } from "@Shared/Enums";
 import { EmailRegex, ISPastDate, PasswordRegex, PhoneRegex } from "@Shared/Validations";
 import { IsDate, IsEnum, IsNotEmpty, IsString, Matches, Length } from 'class-validator';
+import { Type } from 'class-transformer';
+
 
 export class BaseUserDTO {
   @IsNotEmpty()
@@ -33,6 +35,7 @@ export class BaseUserDTO {
   gender: Genders;
 
   @IsNotEmpty()
+   @Type(() => Date)
   @IsDate({ message: 'Date of birth must be a valid date'})
   @ISPastDate()
   dateofbirth: Date;

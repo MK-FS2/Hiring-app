@@ -47,6 +47,11 @@ export class Company
 
   @Prop({type:Date,required:false})
   deletedAt?: Date;
+
+
+  @Prop({type:String,required:true})
+  companycode:string
+
 }
 
 export const CompanySchema = SchemaFactory.createForClass(Company);

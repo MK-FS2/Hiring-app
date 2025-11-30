@@ -4,10 +4,11 @@ import { AuthController } from './auth.controller';
 import { AuthFactory } from './factory';
 import { CommonUserModule } from '@Shared/Modules';
 import { MailService } from '@Shared/Utils';
+import { CloudServices } from '@Shared/Utils/Cloud';
 
 @Module({
   imports:[CommonUserModule],
   controllers:[AuthController],
-  providers: [AuthService,AuthFactory,MailService],
+  providers: [AuthService,AuthFactory,MailService,CloudServices],
 })
 export class AuthModule {}

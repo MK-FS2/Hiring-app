@@ -9,9 +9,9 @@ export const DevConfigs = () => (
 
   cloud: 
   {
-    name: process.env.CLOUD_NAME,
-    apiKey: process.env.CLOUD_API_KEY,
-    secret: process.env.CLOUD_SECRET,
+    name: process.env.CloudName,
+    apiKey: process.env.CloudApiKey,
+    secret: process.env.CloudSecret,
   },
 
   email: 

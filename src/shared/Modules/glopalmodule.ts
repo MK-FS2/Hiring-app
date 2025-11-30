@@ -3,6 +3,7 @@ import { Global, Module } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
 import { MongooseModule } from "@nestjs/mongoose";
 import { JwtService } from "@nestjs/jwt";
+import { CloudServices } from "@Shared/Utils/Cloud";
 
 
 
@@ -10,7 +11,7 @@ import { JwtService } from "@nestjs/jwt";
 @Module(
 {
 imports:[MongooseModule.forFeature([{name:Token.name,schema:TokenSchema}])],
-providers:[TokenRepository,JwtService,ConfigService],
-exports:[TokenRepository,JwtService]
+providers:[TokenRepository,JwtService,ConfigService,CloudServices],
+exports:[TokenRepository,JwtService,ConfigService,CloudServices]
 })
 export class GlobalModule {}

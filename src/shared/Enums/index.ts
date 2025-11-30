@@ -57,3 +57,28 @@ export enum Degrees
     DIPLOMA = 'DIPLOMA',
     CERTIFICATE = 'CERTIFICATE',
 }
+
+export const enum Filecount 
+{
+  File = "File",
+  Files = "Files"
+}
+
+export const enum FolderTypes {
+  Resumes = "Resumes",
+  JobPostings = "JobPostings",
+  Candidates = "Candidates",
+  Interviews = "Interviews",
+  Offers = "Offers",
+  Onboarding = "Onboarding",
+  Feedback = "Feedback",
+  Training = "Training",
+  Reports = "Reports",
+  Contracts = "Contracts",
+  Assessments = "Assessments",
+  Departments = "Departments",
+  Users = "Users",
+  Photos = "Photos",
+  Documents = "Documents",
+  App="Hiring"
+}
