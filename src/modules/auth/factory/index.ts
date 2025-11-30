@@ -3,7 +3,7 @@ import { HRDTO, MangerDTO } from "../dto";
 import { OTPTypes, UserAgent } from "@Shared/Enums";
 import {nanoid} from "nanoid"
 import { HREntity, MangerEntity } from "../entity";
-
+import * as bcrypt from 'bcrypt';
 
 @Injectable()
 export class AuthFactory 
@@ -20,7 +20,7 @@ export class AuthFactory
      manger.gender = mangerDTO.gender
      manger.dateofbirth = mangerDTO.dateofbirth
      manger.provider = UserAgent.System
-     manger.OTP=[{OTP:nanoid(5),OTPtype: OTPTypes.ConfirmEmail,ExpiresAt: new Date(Date.now()+10*60*1000)}];
+     manger.OTP=[{OTP:bcrypt.hashSync(nanoid(5),10),OTPtype: OTPTypes.ConfirmEmail,ExpiresAt: new Date(Date.now()+10*60*1000)}];
      return manger
     }
 
@@ -35,7 +35,7 @@ export class AuthFactory
      hr.gender = hrDTO.gender
      hr.dateofbirth = hrDTO.dateofbirth
      hr.provider = UserAgent.System
-     hr.OTP=[{OTP:nanoid(5),OTPtype: OTPTypes.ConfirmEmail,ExpiresAt: new Date(Date.now()+10*60*1000)}];
+     hr.OTP=[{OTP:bcrypt.hashSync(nanoid(5),10),OTPtype: OTPTypes.ConfirmEmail,ExpiresAt: new Date(Date.now()+10*60*1000)}];
      return hr
     }
 

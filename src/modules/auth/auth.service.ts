@@ -1,12 +1,14 @@
 import { HRRepository } from '@Models/Users';
 import { CompanyRepository } from './../../models/Company/Company.Repository';
-import { ConflictException, Injectable, InternalServerErrorException, NotFoundException } from '@nestjs/common';
+import { BadRequestException, ConflictException, Injectable, InternalServerErrorException, NotFoundException } from '@nestjs/common';
 import { BaseUserRepository, MangerRepository } from '@Models/Users';
 import { MailService } from '@Shared/Utils';
 import { CloudServices } from '@Shared/Utils/Cloud';
-import { FolderTypes } from '@Shared/Enums';
+import { FolderTypes, OTPTypes } from '@Shared/Enums';
 import { FileSchema } from '@Models/common';
 import { HREntity, MangerEntity } from './entity';
+import * as bcrypt from 'bcrypt';
+import { ConfirmEmailDTO } from './dto';
 
 @Injectable()
 export class AuthService 
@@ -132,7 +134,43 @@ async SignUpHR(hr:HREntity,coverimage:Express.Multer.File,profilePic:Express.Mul
     return result
 }
 
+async ConfirmEmail(confirmEmailDTO: ConfirmEmailDTO) 
+{
+  const userExist = await this.baseUserRepository.FindOne({ email: confirmEmailDTO.email },{ email: 1, OTP: 1});
 
+  if (!userExist) {
+    throw new BadRequestException("Invalid email");
+  }
+
+  if (!userExist.OTP || userExist.OTP.length === 0) {
+    throw new BadRequestException("No OTP found");
+  }
+
+  let otpMatch = false;
+  let otpExpiresAt: Date = new Date();
+
+  for (const obj of userExist.OTP) 
+    {
+    if (bcrypt.compareSync(confirmEmailDTO.OTP, obj.OTP) && obj.OTPtype == OTPTypes.ConfirmEmail) 
+    {
+      otpMatch = true;
+      otpExpiresAt = new Date(obj.ExpiresAt);
+      break;
+    }
+  }
+
+  if (!otpMatch) 
+  {
+    throw new BadRequestException("Invalid OTP");
+  }
+
+  if (new Date() > otpExpiresAt) 
+  {
+    throw new BadRequestException("OTP timed out");
+  }
+
+  return true;
+}
 
 
 

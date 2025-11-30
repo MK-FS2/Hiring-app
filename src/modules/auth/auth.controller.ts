@@ -1,6 +1,6 @@
 import { Body, Controller, InternalServerErrorException, Post, UseInterceptors } from '@nestjs/common';
 import { AuthService } from './auth.service';
-import {  HRDTO, MangerDTO } from './dto';
+import {  ConfirmEmailDTO,HRDTO, MangerDTO } from './dto';
 import { AuthFactory } from './factory';
 import { FilesInterceptor } from '@Shared/Interceptors';
 import { FileTypes } from '@Shared/Helpers';
@@ -40,4 +40,11 @@ async SignUpHr(@Body()hrDTO:HRDTO,@FileData({optional:true,fieldname:"coverPic"}
 
 }
 
+
+async ConfirmEmail(@Body()confirmEmailDTO:ConfirmEmailDTO)
+{
+const Result = await this.authService.ConfirmEmail(confirmEmailDTO)
+if(!Result) throw new InternalServerErrorException("Internal Server Error")
+return
+}
 }
