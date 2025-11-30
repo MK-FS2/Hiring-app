@@ -1,0 +1,14 @@
+import AbstractRepository from "@Models/AbstractRepository";
+import { Applicant } from "./Applicant.Schema";
+import { Model } from "mongoose";
+import { InjectModel } from "@nestjs/mongoose";
+import { Injectable } from "@nestjs/common";
+
+@Injectable()
+export class ApplicanRepository extends AbstractRepository<Applicant>
+{
+constructor(@InjectModel(Applicant.name)ApplicantModel:Model<Applicant>)
+{
+super(ApplicantModel)
+}
+}
