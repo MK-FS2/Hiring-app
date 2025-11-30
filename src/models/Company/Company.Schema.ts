@@ -21,7 +21,7 @@ export class Company
   @Prop({type:Number,required:false})
   numberofemployees: number;
 
-  @Prop({type:Types.ObjectId,required:true})
+  @Prop({type:Types.ObjectId,required:true,ref:"Manger"})
   createdby:Types.ObjectId;
 
   @Prop({type:Addressschema,required:true})
@@ -33,7 +33,7 @@ export class Company
   @Prop({type:FileSchema,required:true})
   coverPic:FileSchema;
 
-  @Prop({type:[Types.ObjectId],required:false})
+  @Prop({type:[Types.ObjectId],required:false,ref:"HR"})
   Hrs?:Types.ObjectId[];
 
   @Prop({type:[FileSchema],required:true})

@@ -9,6 +9,7 @@ export class OTPSchema
 {
     OTP:string
     OTPtype:OTPTypes
+    ExpiresAt:Date
 }
 
 
@@ -48,7 +49,7 @@ password:string
 gender:Genders
 
 @Prop({type:String,enum:UserAgent,required:true})
-provider?:UserAgent
+provider:UserAgent
 
 @Prop({type: Date,required: true,validate: 
   {

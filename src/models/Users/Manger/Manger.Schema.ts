@@ -22,15 +22,15 @@ bannedAt?: Date;
 isBanned?: boolean;
 isVerified?: boolean;
 dateofbirth: Date;
-provider?: UserAgent;
+provider: UserAgent;
 deletedAt?: Date;  
 OTP?: OTPSchema[]; 
 
 @Prop({type:SchemaTypes.ObjectId,ref:"Company"})
-companyId:Types.ObjectId
+companyId?:Types.ObjectId
 
-@Prop({type:Date,required:true})
-hireDate:Date;
+@Prop({type:Date,required:false,default:false})
+createdAcompany?:boolean
 }
 
 export const MangerSchema = SchemaFactory.createForClass(Manger)

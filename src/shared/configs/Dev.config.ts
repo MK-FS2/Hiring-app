@@ -16,8 +16,8 @@ export const DevConfigs = () => (
 
   email: 
   {
-    user: process.env.EMAIL_USER,
-    pass: process.env.EMAIL_PASS,
+    user: process.env.EMAILUSER,
+    pass: process.env.EMAILPASS,
   },
 
   encryption: 

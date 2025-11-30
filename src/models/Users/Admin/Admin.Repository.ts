@@ -5,7 +5,7 @@ import { Model } from "mongoose";
 import { Injectable } from "@nestjs/common";
 
 @Injectable()
-export class AdminRepositoriy extends AbstractRepository<Admin>
+export class AdminRepository extends AbstractRepository<Admin>
 {
 constructor(@InjectModel(Admin.name)AdminModel:Model<Admin>)
 {

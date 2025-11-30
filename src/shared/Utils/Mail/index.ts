@@ -1,43 +1,43 @@
+import { Injectable } from "@nestjs/common";
+import { ConfigService } from "@nestjs/config";
 import nodemailer from "nodemailer";
 
-async function SendMail(toEmail: string, content: string, ExpireTime:Date):Promise<boolean> 
+@Injectable()
+export class MailService 
 {
+  private transport;
 
-  const transport = nodemailer.createTransport(
-{
-    service: "gmail",
-    auth: {
-    user: process.env.EMAILUSER,
-      pass: process.env.EMAILPASS,
-    },
-  });
-  const diffInMinutes = Math.ceil((ExpireTime.getTime() - Date.now()) / 60000);
-  const mailOptions = {
-    from: `"Social App" <${process.env.EMAIL_USER}>`,
-    to: toEmail,
-    subject: "Your OTP Code",
-    html:
-     `
-      <div style="font-family: Arial, sans-serif; padding: 10px;">
-        <h2 style="color: #333;">Email Verification</h2>
-        <p style="font-size: 16px;">Your verification code is:</p>
-        <p style="font-size: 24px; font-weight: bold; color: #007bff;">${content}</p>
-        <p style="font-size: 14px; color: #555;">
-          This code will expire in ${diffInMinutes} minutes.
-        </p>
-      </div>
-    `,
-  };
+  constructor(private configService:ConfigService) 
+  {
+    const emailConfig = this.configService.get<{user:string;pass:string}>("email");
+    
+    this.transport = nodemailer.createTransport({service:"gmail",auth: {user:emailConfig!.user,pass:emailConfig!.pass}});
+  }
 
-   const SendResult = await transport.sendMail(mailOptions)
-   if(SendResult.rejected.length > 0)
-   {
-   return false
-   }
-   else 
-   {
-   return true
-   }
+  async sendMail(toEmail: string, content: string, expireTime: Date):Promise<boolean> 
+  {
+    const diffInMinutes=Math.ceil((expireTime.getTime()-Date.now())/60000);
+
+    const emailConfig = this.configService.get<{user:string}>("email");
+
+    const mailOptions = 
+    {
+      from: `"Social App" <${emailConfig!.user}>`,
+      to: toEmail,
+      subject: "Your OTP Code",
+      html: `
+        <div style="font-family: Arial, sans-serif; padding: 10px;">
+          <h2 style="color: #333;">Email Verification</h2>
+          <p style="font-size: 16px;">Your verification code is:</p>
+          <p style="font-size: 24px; font-weight: bold; color: #007bff;">${content}</p>
+          <p style="font-size: 14px; color: #555;">
+            This code will expire in ${diffInMinutes} minutes.
+          </p>
+        </div>
+      `,
+    };
+
+    const sendResult = await this.transport.sendMail(mailOptions);
+    return sendResult.rejected.length === 0;
+  }
 }
-
-export default SendMail;

@@ -1,4 +1,4 @@
-import { Genders } from "@Shared/Enums";
+import { Genders, UserAgent } from "@Shared/Enums";
 
 
 
@@ -11,4 +11,5 @@ phoneNumber: string;
 email: string;
 gender: Genders;
 dateofbirth: Date;
+provider:UserAgent
 }

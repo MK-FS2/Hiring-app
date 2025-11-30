@@ -56,7 +56,7 @@ bannedAt?: Date;
 isBanned?: boolean;
 isVerified?: boolean;
 dateofbirth: Date;
-provider?:UserAgent;
+provider:UserAgent;
 deletedAt?: Date;  
 OTP?: OTPSchema[]; 
 changedCredentialsAt?:Date;
