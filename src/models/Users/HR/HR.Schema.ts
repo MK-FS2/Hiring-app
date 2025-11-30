@@ -7,8 +7,8 @@ import { Genders, HRPermissions, UserAgent } from "@Shared/Enums";
 @Schema({timestamps:{createdAt:true}})
 export class HR 
 {
-readonly Role: string;
-readonly _id: Types.ObjectId;
+readonly Role?: string;
+readonly _id?: Types.ObjectId;
 firstName: string;
 phoneNumber: string;
 gender: Genders;
@@ -18,10 +18,10 @@ password: string;
 profilePic?:FileSchema
 coverPic?: FileSchema 
 bannedAt?: Date;
-isBanned: boolean;
-isVerified: boolean;
+isBanned?: boolean;
+isVerified?: boolean;
 dateofbirth: Date;
-provider: UserAgent;
+provider?: UserAgent;
 deletedAt?: Date;  
 OTP?: OTPSchema[]; 
 changedCredentialsAt?:Date;

@@ -8,8 +8,8 @@ import { Prop, SchemaFactory } from '@nestjs/mongoose';
 
 export class Manger 
 {
-readonly Role:string;
-readonly _id:Types.ObjectId;
+readonly Role?:string;
+readonly _id?:Types.ObjectId;
 firstName:string;
 phoneNumber:string;
 gender:Genders;
@@ -19,10 +19,10 @@ password:string;
 profilePic?:FileSchema
 coverPic?: FileSchema 
 bannedAt?: Date;
-isBanned: boolean;
-isVerified: boolean;
+isBanned?: boolean;
+isVerified?: boolean;
 dateofbirth: Date;
-provider: UserAgent;
+provider?: UserAgent;
 deletedAt?: Date;  
 OTP?: OTPSchema[]; 
 

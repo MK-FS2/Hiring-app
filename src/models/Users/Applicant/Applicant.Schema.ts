@@ -42,8 +42,8 @@ endDate:Date
 @Schema({timestamps:{createdAt:true}})
 export class Applicant 
 {
-readonly Role: string;
-readonly _id: Types.ObjectId;
+readonly Role?: string;
+readonly _id?: Types.ObjectId;
 firstName: string;
 phoneNumber: string;
 gender: Genders;
@@ -53,10 +53,10 @@ password: string;
 profilePic?:FileSchema
 coverPic?: FileSchema 
 bannedAt?: Date;
-isBanned: boolean;
-isVerified: boolean;
+isBanned?: boolean;
+isVerified?: boolean;
 dateofbirth: Date;
-provider:UserAgent;
+provider?:UserAgent;
 deletedAt?: Date;  
 OTP?: OTPSchema[]; 
 changedCredentialsAt?:Date;
@@ -65,7 +65,7 @@ changedCredentialsAt?:Date;
 industry:IndustriesFeilds
 
 
-@Prop({type:String,required:true,minLength:[2,"minimum of 2 characters"]})
+@Prop({type:String,required:true,minLength:[2,"minimum of 2 characters"],maxLength:[100,"Maximum of 100 characters"]})
 titel:string
 
 
@@ -74,7 +74,7 @@ titel:string
     message: 'A maximum of 15 skills is allowed',
   },
 })
-skills?: string[];
+skills: string[];
 
 @Prop({type: String,required: false,minlength: [10,'Minimum of 10 characters required'],maxlength: [400,'Maximum of 200 characters allowed']})
 description?: string;

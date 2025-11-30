@@ -12,11 +12,11 @@ export class OTPSchema
 }
 
 
-@Schema({timestamps:{createdAt:true},toJSON:{virtuals:true},toObject:{virtuals:true}})
+@Schema({timestamps:{createdAt:true},toJSON:{virtuals:true},toObject:{virtuals:true},discriminatorKey:"Role"})
 export class User
 {
-readonly Role:string
-readonly _id:Types.ObjectId
+readonly Role?:string
+readonly _id?:Types.ObjectId
 
 @Prop({type:String,required:true,minLength:[2,"minimum of 2 characters"],maxLength:[20,"maximumm of 20 characters"]})
 firstName:string
@@ -24,7 +24,7 @@ firstName:string
 @Prop({type:String,required:true,minLength:[2,"minimum of 2 characters"],maxLength:[20,"maximumm of 20 characters"]})
 lastName:string
 
-@Prop({type:String,required:true,match:[EmailRegex,"Invalid email format"]})
+@Prop({type:String,required:true,match:[EmailRegex,"Invalid email format"],unique:true})
 email:string
 
 @Prop({type:String,required:true})
@@ -48,7 +48,7 @@ password:string
 gender:Genders
 
 @Prop({type:String,enum:UserAgent,required:true})
-provider:UserAgent
+provider?:UserAgent
 
 @Prop({type: Date,required: true,validate: 
   {
@@ -64,7 +64,7 @@ provider:UserAgent
 dateofbirth:Date
 
 @Prop({type:Boolean,required:false,default:false})
-isVerified:boolean
+isVerified?:boolean
 
 @Prop({type: Date,required: false,validate: 
     {
@@ -78,7 +78,7 @@ isVerified:boolean
 deletedAt?:Date
 
 @Prop({type:Boolean,required:false,default:false})
-isBanned:boolean 
+isBanned?:boolean 
 
 @Prop({type:Date,required:function(this:User)
 {
