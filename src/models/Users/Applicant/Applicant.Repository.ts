@@ -5,9 +5,9 @@ import { InjectModel } from "@nestjs/mongoose";
 import { Injectable } from "@nestjs/common";
 
 @Injectable()
-export class ApplicanRepository extends AbstractRepository<Applicant>
+export class ApplicantRepository extends AbstractRepository<Applicant>
 {
-constructor(@InjectModel(Applicant.name)ApplicantModel:Model<Applicant>)
+constructor(@InjectModel(Applicant.name) private readonly ApplicantModel:Model<Applicant>)
 {
 super(ApplicantModel)
 }

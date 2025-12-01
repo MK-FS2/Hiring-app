@@ -4,11 +4,13 @@ import { Genders, OTPTypes, UserAgent } from "@Shared/Enums";
 import { EmailRegex} from "@Shared/Validations";
 import { Types } from "mongoose";
 
-@Schema({timestamps:{createdAt:true}})
+@Schema({timestamps:false})
 export class OTPSchema 
-{
+{   @Prop({type:String,required:true})
     OTP:string
+    @Prop({type:String,enum:OTPTypes,required:true})
     OTPtype:OTPTypes
+    @Prop({type:Date,required:true})
     ExpiresAt:Date
 }
 
@@ -107,4 +109,4 @@ changedCredentialsAt?: Date;
 OTP?:OTPSchema[]
 }
 
-export const UserShema = SchemaFactory.createForClass(User)
+export const UserSchema = SchemaFactory.createForClass(User)

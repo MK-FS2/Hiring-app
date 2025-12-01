@@ -14,8 +14,10 @@ Google
 export enum OTPTypes 
 {
 ConfirmEmail,
-ForgetPassword
+ForgetPassword 
 }
+
+
 
 export enum HRPermissions 
 {

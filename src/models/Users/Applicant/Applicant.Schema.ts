@@ -74,7 +74,7 @@ titel:string
     message: 'A maximum of 15 skills is allowed',
   },
 })
-skills: string[];
+skills?:string[];
 
 @Prop({type: String,required: false,minlength: [10,'Minimum of 10 characters required'],maxlength: [400,'Maximum of 200 characters allowed']})
 description?: string;

@@ -1,15 +1,15 @@
+import { ApplicantDTO } from './../dto/signups/signup_applicant.dto';
 import { Injectable } from "@nestjs/common";
 import { HRDTO, MangerDTO } from "../dto";
 import { OTPTypes, UserAgent } from "@Shared/Enums";
-import {nanoid} from "nanoid"
-import { HREntity, MangerEntity } from "../entity";
+import { ApplicantEntity, HREntity, MangerEntity } from "../entity";
 import * as bcrypt from 'bcrypt';
 
 @Injectable()
 export class AuthFactory 
 {
 
-    CreateManger(mangerDTO:MangerDTO)
+    CreateManger(mangerDTO:MangerDTO,otpcode:string)
     {
      const manger = new MangerEntity()
      manger.firstName = mangerDTO.firstName
@@ -20,11 +20,11 @@ export class AuthFactory
      manger.gender = mangerDTO.gender
      manger.dateofbirth = mangerDTO.dateofbirth
      manger.provider = UserAgent.System
-     manger.OTP=[{OTP:bcrypt.hashSync(nanoid(5),10),OTPtype: OTPTypes.ConfirmEmail,ExpiresAt: new Date(Date.now()+10*60*1000)}];
+     manger.OTP=[{OTP:bcrypt.hashSync(otpcode,10),OTPtype: OTPTypes.ConfirmEmail,ExpiresAt: new Date(Date.now()+10*60*1000)}];
      return manger
     }
 
-    CreateHR(hrDTO:HRDTO)
+    CreateHR(hrDTO:HRDTO,otbcode:string)
     {
     const hr = new HREntity()
      hr.firstName = hrDTO.firstName
@@ -35,8 +35,27 @@ export class AuthFactory
      hr.gender = hrDTO.gender
      hr.dateofbirth = hrDTO.dateofbirth
      hr.provider = UserAgent.System
-     hr.OTP=[{OTP:bcrypt.hashSync(nanoid(5),10),OTPtype: OTPTypes.ConfirmEmail,ExpiresAt: new Date(Date.now()+10*60*1000)}];
+     hr.OTP=[{OTP:bcrypt.hashSync(otbcode,10),OTPtype: OTPTypes.ConfirmEmail,ExpiresAt: new Date(Date.now()+10*60*1000)}];
+     hr.companyId = hrDTO.companyId
+     hr.hireDate = hrDTO.hireDate
      return hr
+    }
+
+    CreateApplicant(applicantDTO:ApplicantDTO,otbcode:string)
+    {
+     const applicant = new ApplicantEntity()
+     applicant.firstName = applicantDTO.firstName
+     applicant.lastName = applicantDTO.lastName
+     applicant.email = applicantDTO.email
+     applicant.password = applicantDTO.password
+     applicant.phoneNumber = applicantDTO.phoneNumber
+     applicant.gender = applicantDTO.gender
+     applicant.dateofbirth = applicantDTO.dateofbirth
+     applicant.provider = UserAgent.System
+     applicant.OTP=[{OTP:bcrypt.hashSync(otbcode,10),OTPtype: OTPTypes.ConfirmEmail,ExpiresAt: new Date(Date.now()+10*60*1000)}];
+     applicant.titel = applicantDTO.titel
+     applicant.industry = applicantDTO.industry
+     return applicant
     }
 
 }
