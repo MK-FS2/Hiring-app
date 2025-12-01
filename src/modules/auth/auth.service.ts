@@ -1,14 +1,20 @@
-import { ApplicantRepository } from '@Models/Users';
+import { JwtService } from '@nestjs/jwt';
+import { ConfigService } from '@nestjs/config';
+import { Applicant, ApplicantRepository } from '@Models/Users';
 import { HRRepository } from '@Models/Users';
-import { BadRequestException, ConflictException, Injectable, InternalServerErrorException} from '@nestjs/common';
+import { BadRequestException, ConflictException, Injectable, InternalServerErrorException, UnauthorizedException} from '@nestjs/common';
 import { BaseUserRepository, MangerRepository } from '@Models/Users';
 import { MailService } from '@Shared/Utils';
 import { CloudServices } from '@Shared/Utils/Cloud';
-import { FolderTypes, OTPTypes } from '@Shared/Enums';
+import { FolderTypes, OTPTypes, UserAgent } from '@Shared/Enums';
 import { FileSchema } from '@Models/common';
 import { ApplicantEntity, MangerEntity } from './entity';
 import * as bcrypt from 'bcrypt';
 import { ConfirmEmailDTO, ResetPasswordDTO } from './dto';
+import { OAuth2Client } from "google-auth-library";
+import { LoginDTO } from './dto/login.dto';
+
+
 
 @Injectable()
 export class AuthService 
@@ -17,7 +23,9 @@ constructor(private readonly baseUserRepository:BaseUserRepository,
 private readonly mangerRepository:MangerRepository,private readonly mailService:MailService,
 private readonly cloudServices:CloudServices,
 private readonly hrRepository:HRRepository,
-private readonly applicantRepository:ApplicantRepository
+private readonly applicantRepository:ApplicantRepository,
+private readonly configService:ConfigService,
+private readonly jwtService:JwtService
 ){}
 
 // To be refactored into common private methods 
@@ -199,7 +207,7 @@ async ResendOTP(email: string, flag: OTPTypes, otpcode: string)
 
   return true;
 }
-// security risk observed,credintial time is behind by 1 hour due to day light saving
+
 async ResetPassword(resetPasswordDTO:ResetPasswordDTO)
 {
 const userExist = await this.baseUserRepository.FindOne({email:resetPasswordDTO.email},{OTP:1})
@@ -247,7 +255,7 @@ return true
 
 }
 
-async SignUpApplicant(applicant:ApplicantEntity,coverimage:Express.Multer.File,profilePic:Express.Multer.File,otpcode:string)
+async SignUpApplicantSystem(applicant:ApplicantEntity,coverimage:Express.Multer.File,profilePic:Express.Multer.File,otpcode:string)
 {
     const emailExist = await this.baseUserRepository.Exist({email:applicant.email})
     if(emailExist)
@@ -304,6 +312,79 @@ async SignUpApplicant(applicant:ApplicantEntity,coverimage:Express.Multer.File,p
     return result
 }
 
+async SignUpApplicantGoogle(OAuthToken: string) {
+  const key = this.configService.get<string>('google.clientId');
+  if (!key) throw new InternalServerErrorException('Google Client ID is not configured');
+
+  const client = new OAuth2Client(key);
+
+  const ticket = await client.verifyIdToken({
+    idToken: OAuthToken,
+    audience: key,
+  });
+
+  const googlePayload = ticket.getPayload();
+  if (!googlePayload || !googlePayload.email || !googlePayload.given_name || !googlePayload.family_name) {
+    throw new BadRequestException(
+      'Google account did not provide required permissions (email, first name, last name).',
+    );
+  }
+
+ const applicant:Applicant = 
+ {
+  firstName: googlePayload.given_name,
+  lastName: googlePayload.family_name,
+  email: googlePayload.email,
+  isVerified: true,
+  provider: UserAgent.Google,
+  profilePic: {ID:'Code_Google',URL:googlePayload.picture || ''},
+};
+
+
+const creationResult = await this.applicantRepository.CreatDocument(applicant)
+if(!creationResult)
+{
+  throw new InternalServerErrorException("Error creating")
+}
+return true
+}
+
+async LoginSystem(loginDTO:LoginDTO)
+{
+const userExist = await this.baseUserRepository.FindOne({email:loginDTO.email,isVerified:true})
+if(!userExist)
+{
+  throw new BadRequestException("Invalid email or password")
+}
+if(userExist.provider == UserAgent.Google)
+{
+  throw new UnauthorizedException("login using google")
+}
+
+
+if(!bcrypt.compareSync(loginDTO.password,userExist.password!))
+{
+throw new BadRequestException("Invalid email or password")
+}
+
+
+   const payload = 
+  {
+    id: userExist._id,
+    fullName: `${userExist.firstName}-${userExist.lastName}`,
+    email: userExist.email,
+    role: userExist.Role,
+  };
+
+  const Akey = this.configService.get<string>("tokens.access")
+  const Rkey = this.configService.get<string>("tokens.refresh")
+
+  const accessToken = this.jwtService.sign(payload, {secret:Akey,expiresIn:'7d'});
+  const refreshToken = this.jwtService.sign(payload,{secret:Rkey,expiresIn:'30d'});
+  
+  return {accessToken,refreshToken}
+
+}
 
 
 }

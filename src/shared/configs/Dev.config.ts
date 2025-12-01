@@ -22,17 +22,17 @@ export const DevConfigs = () => (
 
   encryption: 
   {
-    key: process.env.ENCRYPTION_KEY,
+    key: process.env.Encryptionkey,
   },
 
   tokens: 
   {
-    access: process.env.ACCESS_TOKEN_SECRET,
-    refresh: process.env.REFRESH_TOKEN_SECRET,
+    access: process.env.AcessToken,
+    refresh: process.env.RefreshToken,
   },
 
   google: 
   {
-    clientId: process.env.GOOGLE_CLIENT_ID,
+    clientId: process.env.ClientKey,
   },
 });

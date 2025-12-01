@@ -44,29 +44,29 @@ export class Applicant
 {
 readonly Role?: string;
 readonly _id?: Types.ObjectId;
-firstName: string;
-phoneNumber: string;
-gender: Genders;
+firstName:string;
+phoneNumber?:string;
+gender?: Genders;
 lastName: string;
 email: string;
-password: string;
+password?: string;
 profilePic?:FileSchema
 coverPic?: FileSchema 
 bannedAt?: Date;
 isBanned?: boolean;
 isVerified?: boolean;
-dateofbirth: Date;
+dateofbirth?: Date;
 provider:UserAgent;
 deletedAt?: Date;  
 OTP?: OTPSchema[]; 
 changedCredentialsAt?:Date;
 
-@Prop({type:String,enum:IndustriesFeilds,required:true})
-industry:IndustriesFeilds
+@Prop({type: String,enum:IndustriesFeilds,required: function(this:Applicant) { return this.provider === UserAgent.System; } })
+industry?:IndustriesFeilds
 
 
-@Prop({type:String,required:true,minLength:[2,"minimum of 2 characters"],maxLength:[100,"Maximum of 100 characters"]})
-titel:string
+@Prop({ type: String, required: function(this: Applicant) { return this.provider === UserAgent.System; }, minlength: [2, "Minimum of 2 characters"], maxlength: [100, "Maximum of 100 characters"] })
+titel?:string
 
 
 @Prop({type:[String],required: false,default: [],validate:{

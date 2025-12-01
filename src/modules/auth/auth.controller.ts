@@ -1,3 +1,4 @@
+import { LoginDTO } from './dto/login.dto';
 import { nanoid } from 'nanoid';
 import { BadRequestException, Body, Controller, InternalServerErrorException, Param, ParseIntPipe, Post, Put, UseInterceptors } from '@nestjs/common';
 import { AuthService } from './auth.service';
@@ -51,13 +52,21 @@ return {message:"Successfully signed up",status:200}
   {Filecount:Filecount.File,Optional:false,Size:1*1024*1024,FileType:FileTypes.Image,FieldName:'profilePic'}
 ]
 ))
-async ApplicantSignUpSystem(@Body()applicantDTO:ApplicantDTO,@FileData({optional:true,fieldname:"coverPic"})coverimage:Express.Multer.File,@FileData({optional:false,fieldname:"profilePic"})profilePic:Express.Multer.File)
+async SignUpApplicantSystem(@Body()applicantDTO:ApplicantDTO,@FileData({optional:true,fieldname:"coverPic"})coverimage:Express.Multer.File,@FileData({optional:false,fieldname:"profilePic"})profilePic:Express.Multer.File)
 {
   const otpcode = nanoid(5)
   const applicant = this.authFactory.CreateApplicant(applicantDTO,otpcode)
-  const Result = await this.authService.SignUpApplicant(applicant,coverimage,profilePic,otpcode)
+  const Result = await this.authService.SignUpApplicantSystem(applicant,coverimage,profilePic,otpcode)
   if(!Result) throw new InternalServerErrorException("Internal Server Error")
   return {message:"Successfully signed up",status:200}
+}
+
+@Post("signup/applicant/Google")
+async SignUpApplicantGoogle(@Body()OAuthToken:string)
+{
+const Result = await this.authService.SignUpApplicantGoogle(OAuthToken)
+if(!Result) throw new InternalServerErrorException("Internal Server Error")
+return {message:"Successfully signed up",status:200}
 }
 
 @Post("confirmEmail")
@@ -101,6 +110,14 @@ async ResetPassword(@Body()resetPasswordDTO:ResetPasswordDTO)
 const Result = await this.authService.ResetPassword(resetPasswordDTO)
 if (!Result) throw new InternalServerErrorException("Internal Server Error");
 return { success: true };
+}
+
+
+@Post("login/system")
+async LoginSsytem(@Body()loginDTO:LoginDTO)
+{
+const Token = await this.authService.LoginSystem(loginDTO)
+return Token
 }
 
 
