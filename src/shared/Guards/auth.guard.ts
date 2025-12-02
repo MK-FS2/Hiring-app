@@ -1,6 +1,6 @@
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
-import { BadRequestException, CanActivate, ExecutionContext, NotFoundException, UnauthorizedException } from "@nestjs/common";
+import { BadRequestException, CanActivate, ExecutionContext, Injectable, NotFoundException, UnauthorizedException } from "@nestjs/common";
 import { ITokenPayload } from '@Shared/Interfaces';
 import { Types } from 'mongoose';
 import { Reflector } from "@nestjs/core";
@@ -8,6 +8,9 @@ import { TokenRepository } from '@Models/Token';
 import { Public_Key } from '@Shared/constants';
 import { BaseUserRepository } from '@Models/Users';
 
+
+
+@Injectable()
 export class AuthGuard implements CanActivate
 {
   constructor(
