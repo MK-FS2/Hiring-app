@@ -25,7 +25,7 @@ constructor(private readonly authService:AuthService,private readonly authFactor
 ]
 ))
 @Post("signup/manger")
-async SignUpManger(@Body()mangerDTO:MangerDTO,@FileData({optional:true,fieldname:"coverPic"})coverimage:Express.Multer.File,@FileData({optional:false,fieldname:"profilePic"})profilePic:Express.Multer.File)
+async SignUpManger(@Body()mangerDTO:MangerDTO,@FileData({optional:true,fieldname:"coverPic",filecount:Filecount.File})coverimage:Express.Multer.File,@FileData({optional:false,fieldname:"profilePic",filecount:Filecount.File})profilePic:Express.Multer.File)
 {
 const otpcode = nanoid(5)
 const manger = this.authFactory.CreateManger(mangerDTO,otpcode)
@@ -52,7 +52,7 @@ return {message:"Successfully signed up",status:200}
   {Filecount:Filecount.File,Optional:false,Size:1*1024*1024,FileType:FileTypes.Image,FieldName:'profilePic'}
 ]
 ))
-async SignUpApplicantSystem(@Body()applicantDTO:ApplicantDTO,@FileData({optional:true,fieldname:"coverPic"})coverimage:Express.Multer.File,@FileData({optional:false,fieldname:"profilePic"})profilePic:Express.Multer.File)
+async SignUpApplicantSystem(@Body()applicantDTO:ApplicantDTO,@FileData({optional:true,fieldname:"coverPic",filecount:Filecount.File})coverimage:Express.Multer.File,@FileData({optional:false,fieldname:"profilePic",filecount:Filecount.File})profilePic:Express.Multer.File)
 {
   const otpcode = nanoid(5)
   const applicant = this.authFactory.CreateApplicant(applicantDTO,otpcode)

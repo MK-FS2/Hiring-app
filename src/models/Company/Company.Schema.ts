@@ -7,7 +7,7 @@ import { Types } from "mongoose";
 export class Company 
 {
   @Prop({type:String,required:true,unique:true})
-  companyname: string;
+  companyname:string;
 
   @Prop({type:String,required:true,unique:true})
   Companyemail:string;
@@ -15,32 +15,32 @@ export class Company
   @Prop({type:String,required:true})
   description: string;
 
-  @Prop({ type:String, enum: IndustriesFeilds,required:true })
+  @Prop({ type:String, enum: IndustriesFeilds,required:true})
   indstry: IndustriesFeilds;
 
   @Prop({type:Number,required:false})
-  numberofemployees: number;
+  numberofemployees?: number;
 
   @Prop({type:Types.ObjectId,required:true,ref:"Manger"})
-  createdby:Types.ObjectId;
+  createdby?:Types.ObjectId;
 
   @Prop({type:Addressschema,required:true})
   address: Addressschema;
 
-  @Prop({type:FileSchema,required:true})
-  logo:FileSchema;
+  @Prop({type:FileSchema,required:false})
+  logo?:FileSchema;
 
-  @Prop({type:FileSchema,required:true})
-  coverPic:FileSchema;
+  @Prop({type:FileSchema,required:false})
+  coverPic?:FileSchema;
 
   @Prop({type:[Types.ObjectId],required:false,ref:"HR"})
   Hrs?:Types.ObjectId[];
 
-  @Prop({type:[FileSchema],required:true})
-  legalDocuments: FileSchema[];
+  @Prop({type:[FileSchema],required:false})
+  legalDocuments?:FileSchema[];
 
   @Prop({type:Boolean,required:false,default:false})
-  approvedByAdmin:boolean
+  approvedByAdmin?:boolean
 
   @Prop({type:Date,required:false})
   bannedAt?:Date;
@@ -49,8 +49,8 @@ export class Company
   deletedAt?: Date;
 
 
-  @Prop({type:String,required:true})
-  companycode:string
+  @Prop({type:[String],required:false})
+  companycodes?:string[]
 
 }
 

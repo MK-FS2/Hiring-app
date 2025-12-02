@@ -1,3 +1,5 @@
 export * from "./fileData"
 export * from "./public.decorator"
 export * from "./allowedRoles.decorator"
+export * from "./fullguard.decorator"
+export * from "./userdata.decorator"

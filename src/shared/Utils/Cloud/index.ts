@@ -38,10 +38,9 @@ async deleteFolder(folder:string): Promise<boolean>
 {
   try 
   {
-    await cloudinary.api.delete_resources_by_prefix(folder,{
-      resource_type: "image",
-    });
-    await cloudinary.api.delete_folder(folder);
+   await cloudinary.api.delete_resources_by_prefix(folder,{resource_type:"image",});
+   await cloudinary.api.delete_resources_by_prefix(folder, {resource_type: "raw",});
+   await cloudinary.api.delete_folder(folder);
     return true;
   } 
   catch (err) 

@@ -146,13 +146,17 @@ async ConfirmEmail(confirmEmailDTO: ConfirmEmailDTO)
 {
   const userExist = await this.baseUserRepository.FindOne({ email: confirmEmailDTO.email },{ email:1, OTP: 1});
 
-  if (!userExist) {
+  if (!userExist) 
+  {
     throw new BadRequestException("Invalid email");
   }
 
-  if (!userExist.OTP || userExist.OTP.length === 0) {
+  if (!userExist.OTP || userExist.OTP.length === 0) 
+  {
     throw new BadRequestException("No OTP found");
   }
+
+ 
 
   let otpMatch = false;
   let otpExpiresAt: Date = new Date();
@@ -176,8 +180,12 @@ async ConfirmEmail(confirmEmailDTO: ConfirmEmailDTO)
   {
     throw new BadRequestException("OTP timed out");
   }
-
-   await this.baseUserRepository.UpdateOne({email:confirmEmailDTO.email},{$pull:{OTP:{ExpiresAt:otpExpiresAt}},$set:{isVerified:true}})
+ await this.baseUserRepository.UpdateOne({email:confirmEmailDTO.email},{$pull:{OTP:{OTPtype: OTPTypes.ConfirmEmail}}});
+ const result = await this.baseUserRepository.UpdateOne({email:confirmEmailDTO.email},{$set:{isVerified:true}});
+ if(!result)
+ {
+  throw new InternalServerErrorException("Error info")
+ }
 
   return true;
 }
@@ -356,6 +364,13 @@ if(!userExist)
 {
   throw new BadRequestException("Invalid email or password")
 }
+
+if(userExist.isBanned)
+{
+    throw new UnauthorizedException("Your are banned")
+}
+
+
 if(userExist.provider == UserAgent.Google)
 {
   throw new UnauthorizedException("login using google")
@@ -385,6 +400,5 @@ throw new BadRequestException("Invalid email or password")
   return {accessToken,refreshToken}
 
 }
-
 
 }

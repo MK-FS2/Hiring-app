@@ -1,4 +1,4 @@
-import { BadRequestException, CanActivate, ExecutionContext, Injectable } from '@nestjs/common';
+import { BadRequestException, CanActivate, ExecutionContext, Injectable, UnauthorizedException } from '@nestjs/common';
 import { Roles } from '@Shared/Enums';
 import { Reflector } from "@nestjs/core";
 import { Public_Key, ROLES_KEY } from '@Shared/constants';
@@ -37,8 +37,10 @@ export class RoleGuard implements CanActivate
       {
         return true;
       }
-
-      return false;
+      else 
+      {
+         throw new UnauthorizedException("You are not authourised")
+      }
     } 
     catch (err) 
     {

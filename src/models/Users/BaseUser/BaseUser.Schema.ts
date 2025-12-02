@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unsafe-argument */
 import { FileSchema } from "@Models/common";
 import { Prop, Schema, SchemaFactory } from "@nestjs/mongoose";
 import { Genders, OTPTypes, UserAgent } from "@Shared/Enums";
@@ -6,6 +5,10 @@ import { EmailRegex} from "@Shared/Validations";
 import { Types } from "mongoose";
 import * as bcrypt from 'bcrypt';
 import CryptoJS from "crypto-js";
+import { InternalServerErrorException } from "@nestjs/common";
+import dotenv from "dotenv"
+dotenv.config()
+
 
 @Schema({timestamps:false})
 export class OTPSchema 
@@ -99,64 +102,19 @@ OTP?:OTPSchema[]
 
 export const UserSchema = SchemaFactory.createForClass(User)
 
-const key = process.env.EncryptionKey!;
-const IV = process.env.IV!
-const iv = CryptoJS.enc.Utf8.parse(IV); 
+const key = process.env.Encryptionkey!;
+if (!key) throw new InternalServerErrorException("EncryptionKey is missing in env");
 
-UserSchema.pre('save', async function () 
+UserSchema.pre('save',async function() 
 {
-  if (this.isModified('password') && this.password) 
+  if (this.password) 
   {
-    this.password = await bcrypt.hash(this.password, 10);
+  this.password = await bcrypt.hash(this.password, 10);
   }
-
-  if (this.isModified('email') && this.email) 
+    
+  if (this.phoneNumber) 
   {
-    this.email = CryptoJS.AES.encrypt(this.email, CryptoJS.enc.Utf8.parse(key), { iv }).toString();
-  }
-
-  if (this.isModified('phoneNumber') && this.phoneNumber) 
-  {
-    this.phoneNumber = CryptoJS.AES.encrypt(this.phoneNumber, CryptoJS.enc.Utf8.parse(key), { iv }).toString();
+    this.phoneNumber = CryptoJS.AES.encrypt(this.phoneNumber, key).toString();
   }
 });
 
-UserSchema.pre('findOne', function () 
-{
-  const query: any = this.getQuery();
-
-  if (query.email) {
-    query.email = CryptoJS.AES.encrypt(String(query.email), CryptoJS.enc.Utf8.parse(key), { iv }).toString();
-  }
-
-  if (query.phoneNumber) 
-  {
-    query.phoneNumber = CryptoJS.AES.encrypt(String(query.phoneNumber), CryptoJS.enc.Utf8.parse(key), { iv }).toString();
-  }
-
-  this.setQuery(query);
-});
-
-// Decrypt helper
-function decryptFields(doc: any) 
-{
-  if (!doc) return;
-  if (doc.email) 
-  {
-    doc.email = CryptoJS.AES.decrypt(doc.email, CryptoJS.enc.Utf8.parse(key), { iv }).toString(CryptoJS.enc.Utf8);
-  }
-  if (doc.phoneNumber) 
-  {
-    doc.phoneNumber = CryptoJS.AES.decrypt(doc.phoneNumber, CryptoJS.enc.Utf8.parse(key), { iv }).toString(CryptoJS.enc.Utf8);
-  }
-}
-
-UserSchema.post('findOne', function (result) 
-{
-  decryptFields(result);
-});
-
-UserSchema.post('find', function (results: any[]) 
-{
-  results.forEach(decryptFields);
-});

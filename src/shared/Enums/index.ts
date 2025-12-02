@@ -82,7 +82,9 @@ export const enum FolderTypes {
   Users = "Users",
   Photos = "Photos",
   Documents = "Documents",
-  App="Hiring"
+  App="Hiring",
+  Companies="Companies"
+
 }
 
 
