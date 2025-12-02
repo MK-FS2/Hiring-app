@@ -90,7 +90,7 @@ coverPic?:FileSchema
 @Prop({type:FileSchema,required:false})
 profilePic?:FileSchema
 
-@Prop({type:Date,required:false})
+@Prop({type:Date,required:false,default:new Date(Date.now())})
 changedCredentialsAt?: Date;
 
 @Prop({type:[OTPSchema],required:false,default:[]})
