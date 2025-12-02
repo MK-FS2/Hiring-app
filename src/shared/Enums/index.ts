@@ -84,3 +84,12 @@ export const enum FolderTypes {
   Documents = "Documents",
   App="Hiring"
 }
+
+
+export  enum Roles 
+{
+  Admin = "Admin",
+  Manger = "Manger",
+  HR = "HR",
+  Applicant = "Applicant",
+}
