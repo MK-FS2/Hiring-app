@@ -4,6 +4,7 @@ import { HRDTO, MangerDTO } from "../dto";
 import { OTPTypes, UserAgent } from "@Shared/Enums";
 import { ApplicantEntity, HREntity, MangerEntity } from "../entity";
 import * as bcrypt from 'bcrypt';
+import { Types } from 'mongoose';
 
 @Injectable()
 export class AuthFactory 
@@ -36,8 +37,10 @@ export class AuthFactory
      hr.dateofbirth = hrDTO.dateofbirth
      hr.provider = UserAgent.System
      hr.OTP=[{OTP:bcrypt.hashSync(otbcode,10),OTPtype: OTPTypes.ConfirmEmail,ExpiresAt: new Date(Date.now()+10*60*1000)}];
-     hr.companyId = hrDTO.companyId
-     hr.hireDate = hrDTO.hireDate
+     hr.code = hrDTO.code
+     hr.hireDate = new Date(Date.now())
+    //  jsut a place holder
+     hr.companyId = new Types.ObjectId("64d2f5a9c1a4e92b7f123abc")
      return hr
     }
 

@@ -1,9 +1,11 @@
-import { BaseUserEntity } from "./baseuser.entity";
 import { Types } from "mongoose";
+import { BaseUserEntity } from "./baseuser.entity";
+;
 
 
 export class HREntity extends BaseUserEntity 
 {
-companyId:Types.ObjectId;
+code:string
 hireDate: Date;
+companyId:Types.ObjectId
 }

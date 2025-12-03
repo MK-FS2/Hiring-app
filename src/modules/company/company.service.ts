@@ -31,6 +31,7 @@ if(!createdCompany)
     throw new InternalServerErrorException("Error creating")
 }
 
+
 const updateManger = await this.mangerRepository.UpdateOne({_id:userid},{$set:{companyId:createdCompany.id,createdAcompany:true}})
 if(!updateManger)
 {
@@ -42,7 +43,6 @@ const baseFolder = `${FolderTypes.App}/${FolderTypes.Companies}/${createdCompany
 const imagesFolder = `${baseFolder}/${FolderTypes.Photos}`
 const documentsFolder = `${baseFolder}/${FolderTypes.Documents}`
 
-console .log(legalDocuments)
 const documentsPaths = legalDocuments.map((doc)=> doc.path)
 
 const imagespaths = [logo.path,coverPic.path]
@@ -72,7 +72,6 @@ if(!updateResult)
     await this.mangerRepository.UpdateOne({_id:userid},{$set:{createdAcompany:false},$unset:{companyId:""}})
     throw new InternalServerErrorException("Error uploading")
 }
-console.log(uploadDocumentsResult)
 return true
 }
 

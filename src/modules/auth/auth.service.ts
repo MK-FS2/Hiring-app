@@ -1,14 +1,15 @@
+import { CompanyRepository } from './../../models/Company/Company.Repository';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import { Applicant, ApplicantRepository } from '@Models/Users';
 import { HRRepository } from '@Models/Users';
-import { BadRequestException, ConflictException, Injectable, InternalServerErrorException, UnauthorizedException} from '@nestjs/common';
+import { ConflictException, Injectable, InternalServerErrorException,UnauthorizedException, BadRequestException} from '@nestjs/common';
 import { BaseUserRepository, MangerRepository } from '@Models/Users';
 import { MailService } from '@Shared/Utils';
 import { CloudServices } from '@Shared/Utils/Cloud';
 import { FolderTypes, OTPTypes, UserAgent } from '@Shared/Enums';
 import { FileSchema } from '@Models/common';
-import { ApplicantEntity, MangerEntity } from './entity';
+import { ApplicantEntity, HREntity, MangerEntity } from './entity';
 import * as bcrypt from 'bcrypt';
 import { ConfirmEmailDTO, ResetPasswordDTO } from './dto';
 import { OAuth2Client } from "google-auth-library";
@@ -25,7 +26,8 @@ private readonly cloudServices:CloudServices,
 private readonly hrRepository:HRRepository,
 private readonly applicantRepository:ApplicantRepository,
 private readonly configService:ConfigService,
-private readonly jwtService:JwtService
+private readonly jwtService:JwtService,
+private readonly companyRepository:CompanyRepository
 ){}
 
 // To be refactored into common private methods 
@@ -87,60 +89,77 @@ async SignUpManger(manger:MangerEntity,coverimage:Express.Multer.File,profilePic
     return result
 }
 
-// async SignUpHR(hr:HREntity,coverimage:Express.Multer.File,profilePic:Express.Multer.File)
-// {
-//   const emailExist = await this.baseUserRepository.Exist({email:hr.email})
-//   if(emailExist){throw new ConflictException("Email already exist")}
-//   const phoneExist = await this.baseUserRepository.Exist({phoneNumber:hr.phoneNumber})
-//   if(phoneExist){throw new ConflictException("Phone number already exist")}
+async SignUpHR(hr:HREntity,otpcode:string,coverimage:Express.Multer.File,profilePic:Express.Multer.File)
+{
+  const emailExist = await this.baseUserRepository.Exist({email:hr.email})
+  if(emailExist){throw new ConflictException("Email already exist")}
+  const phoneExist = await this.baseUserRepository.Exist({phoneNumber:hr.phoneNumber})
+  if(phoneExist){throw new ConflictException("Phone number already exist")}
    
-//   const CompanyExist = await this.companyRepository.Exist({_id:hr.companyId})
-//   if(!CompanyExist)throw new NotFoundException("No company found")
+  const CompanyExist = await this.companyRepository.FindOne({"companycodes.code":hr.code},{_id:1,companyname:1,"companycodes.$":1})
+  if(!CompanyExist)throw new BadRequestException("Invalid code")
 
+   if(CompanyExist.companycodes && CompanyExist.companycodes[0].expireAt < new Date(Date.now()))
+   {
+    throw new UnauthorizedException("expired code")
+   }
     
-//     const result = await this.hrRepository.CreatDocument(hr)
-//     if(!result)
-//     {
-//         throw new InternalServerErrorException("Error creating")
-//     }
-//     const folder = `${FolderTypes.App}/${FolderTypes.Users}/${result._id.toString()}/${FolderTypes.Photos}`
-//     let cover:FileSchema|null = null 
-//     let profile:FileSchema|null = null
-//     if(coverimage)
-//     {
-//       cover = await this.cloudServices.uploadOne(coverimage.path,folder)
-//       if(!cover)
-//       {
-//         await this.mangerRepository.DeleteOne({_id:result._id})
-//         throw new InternalServerErrorException(`Error uploading image ${coverimage.path}`)
-//       }
-//     }
-//     profile = await this.cloudServices.uploadOne(profilePic.path,folder)
-//     if(!profile)
-//     {
-//      await this.mangerRepository.DeleteOne({_id:result._id})
-//      await this.cloudServices.deleteFolder(folder)
-//     throw new InternalServerErrorException("Error uploading image")
-//     }
+   console.log(CompanyExist._id)
+   hr.companyId = CompanyExist._id
 
-//     if(coverimage)
-//     {
-//      const update = await this.mangerRepository.UpdateOne({_id:result._id},{$set:{coverPic:cover,profilePic:profile}})
-//      if(!update)
-//      {
-//       await this.mangerRepository.DeleteOne({_id:result._id})
-//       await this.cloudServices.deleteFolder(folder)
-//       throw new InternalServerErrorException("Error creating")
-//      }
-//     }
+   const result = await this.hrRepository.CreatDocument(hr)
+   if(!result)
+   {
+        throw new InternalServerErrorException("Error creating")
+   }
+    const folder = `${FolderTypes.App}/${FolderTypes.Users}/${result._id.toString()}/${FolderTypes.Photos}`
     
-//     const emailResult = await this.mailService.sendMail(hr.email,hr.OTP[0].OTP,new Date(Date.now()+10*60*1000))
-//     if(!emailResult)
-//     {
-//     throw new InternalServerErrorException("Email not sent")
-//     }
-//     return result
-// }
+    // Upload profile pic (required)
+    const profile = await this.cloudServices.uploadOne(profilePic.path,folder)
+    if(!profile)
+    {
+     await this.hrRepository.DeleteOne({_id:result._id})
+     throw new InternalServerErrorException("Error uploading profile image")
+    }
+
+    // Upload cover image (optional)
+    let cover:FileSchema|null = null 
+    if(coverimage)
+    {
+      cover = await this.cloudServices.uploadOne(coverimage.path,folder)
+      if(!cover)
+      {
+        await this.hrRepository.DeleteOne({_id:result._id})
+        await this.cloudServices.deleteFolder(folder)
+        throw new InternalServerErrorException(`Error uploading cover image`)
+      }
+    }
+
+    // Update with both images
+    const updateData = coverimage ? {coverPic:cover,profilePic:profile} : {profilePic:profile}
+    const update = await this.hrRepository.UpdateOne({_id:result._id},{$set:updateData})
+    if(!update)
+    {
+      await this.hrRepository.DeleteOne({_id:result._id})
+      await this.cloudServices.deleteFolder(folder)
+      throw new InternalServerErrorException("Error creating")
+    }
+    
+   const addToCompany = await this.companyRepository.UpdateOne({_id: CompanyExist._id}, {$addToSet: {Hrs: result._id}, $pull: {companycodes: {directedTo: hr.email}}});
+   if(!addToCompany)
+   {
+      await this.hrRepository.DeleteOne({_id:result._id})
+      await this.cloudServices.deleteFolder(folder)
+      throw new InternalServerErrorException("Error creating")
+   }
+
+    const emailResult = await this.mailService.sendMail(hr.email,otpcode,new Date(Date.now()+10*60*1000))
+    if(!emailResult)
+    {
+    throw new InternalServerErrorException("Email not sent")
+    }
+    return result
+}
 
 async ConfirmEmail(confirmEmailDTO: ConfirmEmailDTO) 
 {

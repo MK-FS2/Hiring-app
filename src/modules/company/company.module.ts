@@ -10,5 +10,6 @@ import { CompanyFactory } from './factory';
   imports:[CommonUserModule,MongooseModule.forFeature([{name:Company.name,schema:CompanySchema}])],
   controllers:[CompanyController],
   providers: [CompanyService,CompanyRepository,CompanyFactory],
+  exports:[CompanyRepository]
 })
 export class CompanyModule {}

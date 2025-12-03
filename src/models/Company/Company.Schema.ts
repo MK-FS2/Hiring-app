@@ -3,6 +3,22 @@ import { Prop, Schema, SchemaFactory } from "@nestjs/mongoose";
 import { IndustriesFeilds } from "@Shared/Enums";
 import { Types } from "mongoose";
 
+@Schema()
+export class CodeSchema 
+{
+@Prop({type:String,required:true,unique:true})
+code:string
+
+@Prop({type:String,required:true})
+directedTo:string
+
+@Prop({type:Date,required:false,default:new Date(Date.now()+24*60*60*1000)})
+expireAt:Date
+}
+
+
+
+
 @Schema({ timestamps:{createdAt:true}})
 export class Company 
 {
@@ -49,8 +65,8 @@ export class Company
   deletedAt?: Date;
 
 
-  @Prop({type:[String],required:false})
-  companycodes?:string[]
+  @Prop({type:[CodeSchema],required:false,default:[]})
+  companycodes?:CodeSchema[]
 
 }
 

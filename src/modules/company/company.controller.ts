@@ -32,7 +32,7 @@ export class CompanyController
   const company = this.companyFactory.CreateCompany(createCompanyDTO,userid)
   const Result = await this.companyService.CreateCompany(company,userid,logo,coverPic,legalDocuments)
   if(!Result) throw new InternalServerErrorException("Internal Server Error")
-   return {message:" Company created Successfully",status:200}
+  return {message:" Company created Successfully",status:200}
  }
 
 

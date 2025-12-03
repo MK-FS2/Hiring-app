@@ -2,10 +2,10 @@ import { FileSchema } from './../../common/FileSchema';
 import { Genders, UserAgent } from "@Shared/Enums";
 import { SchemaTypes, Types } from "mongoose";
 import { OTPSchema } from '../BaseUser';
-import { Prop, SchemaFactory } from '@nestjs/mongoose';
+import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 
 
-
+@Schema()
 export class Manger 
 {
 readonly Role?:string;
@@ -29,7 +29,7 @@ OTP?: OTPSchema[];
 @Prop({type:SchemaTypes.ObjectId,ref:"Company"})
 companyId?:Types.ObjectId
 
-@Prop({type:Date,required:false,default:false})
+@Prop({type:Boolean,required:false,default:false})
 createdAcompany?:boolean
 }
 

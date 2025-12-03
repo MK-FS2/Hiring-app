@@ -2,7 +2,7 @@ import { LoginDTO } from './dto/login.dto';
 import { nanoid } from 'nanoid';
 import { BadRequestException, Body, Controller, InternalServerErrorException, Param, ParseIntPipe, Post, Put, UseInterceptors } from '@nestjs/common';
 import { AuthService } from './auth.service';
-import {  ApplicantDTO, ConfirmEmailDTO, MangerDTO, ResetPasswordDTO } from './dto';
+import {  ApplicantDTO, ConfirmEmailDTO, HRDTO, MangerDTO, ResetPasswordDTO } from './dto';
 import { AuthFactory } from './factory';
 import { FilesInterceptor } from '@Shared/Interceptors';
 import { FileTypes } from '@Shared/Helpers';
@@ -34,16 +34,25 @@ if(!Result) throw new InternalServerErrorException("Internal Server Error")
 return {message:"Successfully signed up",status:200}
 }
 
-// @Post("signup/hr")
-// async SignUpHr(@Body()hrDTO:HRDTO,@FileData({optional:true,fieldname:"coverPic"})coverimage:Express.Multer.File,@FileData({optional:false,fieldname:"profilePic"})profilePic:Express.Multer.File)
-// {
-//   const hr =  this.authFactory.CreateHR(hrDTO)
-//   const Result = await this.authService.SignUpHR(hr,coverimage,profilePic)
-//   if(!Result) throw new InternalServerErrorException("Internal Server Error")
-//   return {message:"Successfully signed up",status:200}
 
-// }
+@UseInterceptors(new FilesInterceptor(
+[
+  {Filecount:Filecount.File,Optional:true,Size:1*1024*1024,FileType:FileTypes.Image,FieldName:'coverPic'},
+  {Filecount:Filecount.File,Optional:false,Size:1*1024*1024,FileType:FileTypes.Image,FieldName:'profilePic'}
+]
+))
+@Post("signup/hr")
+async SignUpHr(@Body()hrDTO:HRDTO,@FileData({optional:true,fieldname:"coverPic",filecount:Filecount.File})coverimage:Express.Multer.File,@FileData({optional:false,fieldname:"profilePic",filecount:Filecount.File})profilePic:Express.Multer.File)
+{
+   const otpcode = nanoid(5)
+  const hr =  this.authFactory.CreateHR(hrDTO,otpcode)
 
+  const Result = await this.authService.SignUpHR(hr,otpcode,coverimage,profilePic)
+
+  if(!Result) throw new InternalServerErrorException("Internal Server Error")
+  return {message:"Successfully signed up",status:200}
+
+}
 
 @Post("signup/applicant")
 @UseInterceptors(new FilesInterceptor(

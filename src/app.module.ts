@@ -5,6 +5,7 @@ import { DevConfigs } from '@Shared/configs';
 import { AuthModule } from './modules/auth/auth.module';
 import { GlobalModule } from '@Shared/Modules';
 import { CompanyModule } from './modules/company/company.module';
+import { MangerModule } from './modules/manger/manger.module';
 
 @Module(
 {
@@ -14,7 +15,8 @@ import { CompanyModule } from './modules/company/company.module';
   MongooseModule.forRootAsync({imports:[ConfigModule],useFactory:(config:ConfigService)=>({uri:config.get<string>('DB_URL')}),inject:[ConfigService]}),
   GlobalModule,
   AuthModule,
-  CompanyModule
+  CompanyModule,
+  MangerModule
 
   ],
   controllers: []
