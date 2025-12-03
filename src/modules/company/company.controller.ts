@@ -1,9 +1,9 @@
 import { CompanyFactory } from './factory/index';
 import { Types } from 'mongoose';
-import { Body, Controller, InternalServerErrorException, Post, UseInterceptors} from '@nestjs/common';
+import { Body, Controller, InternalServerErrorException, Post, Put, UseInterceptors} from '@nestjs/common';
 import { CompanyService } from './company.service';
 import { FileData, FullGuard, UserData } from '@Shared/Decorators';
-import { Filecount, Roles } from '@Shared/Enums';
+import { CompanyImageFlag, Filecount, Roles } from '@Shared/Enums';
 import { CreateCompanyDTO } from './dto';
 import { FileTypes } from '@Shared/Helpers';
 import { FilesInterceptor } from '@Shared/Interceptors';
@@ -34,6 +34,27 @@ export class CompanyController
   if(!Result) throw new InternalServerErrorException("Internal Server Error")
   return {message:" Company created Successfully",status:200}
  }
+
+
+@UseInterceptors(new FilesInterceptor([{Filecount:Filecount.File,Optional:false,Size:1*1024*1024,FileType:FileTypes.Image,FieldName:'coverPic'}]))
+@Put("updateCoverImage")
+async UpdateCoverImage(@FileData({optional:false,filecount:Filecount.File,fieldname:"coverPic"})coverPic:Express.Multer.File,@UserData("companyId")companyId:Types.ObjectId)
+{
+const Result = await this.companyService.UpdateCompanyImage(coverPic,companyId,CompanyImageFlag.coverPic)
+  if(!Result) throw new InternalServerErrorException("Internal Server Error")
+  return {message:" Updated image Successfully",status:200}
+}
+
+
+@UseInterceptors(new FilesInterceptor([{Filecount:Filecount.File,Optional:false,Size:1*1024*1024,FileType:FileTypes.Image,FieldName:'logo'}]))
+@Put("updateLogo")
+async UpdateLogo(@FileData({optional:false,filecount:Filecount.File,fieldname:"logo"})coverPic:Express.Multer.File,@UserData("companyId")companyId:Types.ObjectId)
+{
+const Result = await this.companyService.UpdateCompanyImage(coverPic,companyId,CompanyImageFlag.logo)
+  if(!Result) throw new InternalServerErrorException("Internal Server Error")
+  return {message:" Updated image Successfully",status:200}
+}
+
 
 
 }

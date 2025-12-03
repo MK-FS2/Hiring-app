@@ -1,10 +1,11 @@
 import { CloudServices } from '@Shared/Utils/Cloud';
 import { MangerRepository } from '@Models/Users';
-import { ConflictException, Injectable, InternalServerErrorException } from '@nestjs/common';
+import { ConflictException, Injectable, InternalServerErrorException} from '@nestjs/common';
 import { Types } from 'mongoose';
 import { CreateCompanyEntity } from './entity';
 import { CompanyRepository } from '@Models/Company';
-import { FolderTypes } from '@Shared/Enums';
+import { CompanyImageFlag, FolderTypes } from '@Shared/Enums';
+import { FileSchema } from '@Models/common';
 
 
 @Injectable()
@@ -75,6 +76,56 @@ if(!updateResult)
 return true
 }
 
+async UpdateCompanyImage(NewImage:Express.Multer.File,companyId:Types.ObjectId,flag:CompanyImageFlag)
+{  
+const folder = `${FolderTypes.App}/${FolderTypes.Companies}/${companyId.toString()}/${FolderTypes.Photos}`
+const company = await this.companyRepository.FindOne({_id:companyId},{coverPic:1,logo:1})
 
+let OldImage:FileSchema|undefined = undefined
+
+if(flag == CompanyImageFlag.coverPic)
+{
+OldImage = company?.coverPic
+}
+else 
+{
+OldImage = company?.logo  
+}
+
+if(!OldImage)
+{
+    const uploadresult = await this.cloudServices.uploadOne(NewImage.path,folder)
+    if(!uploadresult)
+    {
+        throw new InternalServerErrorException("Error uploading")
+    }
+
+    const updateResult = await this.companyRepository.UpdateOne({_id:companyId},{$set:{[flag]:uploadresult}})
+
+    if(!updateResult)
+    {
+        await this.cloudServices.DeleteFile(uploadresult.ID)
+        throw new InternalServerErrorException("Error updating")
+    }
+} 
+else 
+{
+    const replacmentResult = await this.cloudServices.ReplaceFile(NewImage.path,OldImage.ID,folder)
+    if(!replacmentResult)
+    {
+        throw new InternalServerErrorException("Error uploading")
+    }
+
+    const updateResult = await this.companyRepository.UpdateOne({_id:companyId},{$set:{[flag]:replacmentResult}})
+
+    if(!updateResult)
+    {
+        await this.cloudServices.DeleteFile(replacmentResult.ID)
+        throw new InternalServerErrorException("Error updating")
+    }
+}
+
+return true
+}
 
 }

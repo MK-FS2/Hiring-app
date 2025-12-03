@@ -95,3 +95,10 @@ export  enum Roles
   HR = "HR",
   Applicant = "Applicant",
 }
+
+
+export enum CompanyImageFlag 
+{
+  coverPic = "coverPic",
+  logo = "logo"
+}
