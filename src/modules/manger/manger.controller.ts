@@ -1,11 +1,14 @@
-import { Body, ConflictException, Controller, InternalServerErrorException, Post } from '@nestjs/common';
+import { Body, ConflictException, Controller, InternalServerErrorException, Post, UseGuards } from '@nestjs/common';
 import { MangerService } from './manger.service';
 import { FullGuard, UserData } from '@Shared/Decorators';
 import { Roles } from '@Shared/Enums';
 import { CodeDTO } from './dto';
 import { Types } from 'mongoose';
+import { ApprovedCompanyGuard, IsEmployeeGuard} from '@Shared/Guards';
 
 
+
+@UseGuards(ApprovedCompanyGuard,IsEmployeeGuard)
 @FullGuard(Roles.Manger)
 @Controller('manger')
 export class MangerController 

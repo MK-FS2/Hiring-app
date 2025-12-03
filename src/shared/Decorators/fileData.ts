@@ -1,5 +1,5 @@
 import { Filecount } from '@Shared/Enums';
-import { BadRequestException, createParamDecorator, ExecutionContext, InternalServerErrorException } from '@nestjs/common';
+import { BadRequestException,createParamDecorator,ExecutionContext} from '@nestjs/common';
 
 interface FileDataOptions {
   optional: boolean;
@@ -8,8 +8,6 @@ interface FileDataOptions {
 }
 
 export const FileData = createParamDecorator((data:FileDataOptions,context:ExecutionContext) => 
-    {
-    try 
     {
       const {optional,fieldname,filecount} = data;
       const req = context.switchToHttp().getRequest();
@@ -37,10 +35,5 @@ export const FileData = createParamDecorator((data:FileDataOptions,context:Execu
       {
         return target
       }
-    } 
-    catch (err) 
-    {
-      throw new InternalServerErrorException(err);
-    }
   },
 );

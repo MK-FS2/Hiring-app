@@ -18,12 +18,12 @@ async GenerateSignUpCode(codeDTO:CodeDTO,userId:Types.ObjectId,companyId:Types.O
 const compamyExist = await this.companyRepository.FindOne({_id:companyId,createdby:userId})
 if(!compamyExist)
 {
-throw new NotFoundException("No comoany found")
+throw new NotFoundException("No company found")
 }
 
 const code = nanoid(5)
 
-const addingResult = await this.companyRepository.UpdateOne({_id:companyId,createdby:userId},{$push:{companycodes:{code}}})
+const addingResult = await this.companyRepository.UpdateOne({_id:companyId,createdby:userId},{$push:{companycodes:{code,directedTo:hrEmail}}})
 if(!addingResult)
 {
     throw new InternalServerErrorException("Adding error")
@@ -32,7 +32,7 @@ if(!addingResult)
 const sendingResult = await this.mailService.sendMail(hrEmail,code,new Date(Date.now()+24*60*60*1000))
 if(!sendingResult)
 {
-    await this.companyRepository.UpdateOne({_id:companyId,createdby:userId},{$pull:{companycodes:{code:code,directedTo:hrEmail}}})
+    await this.companyRepository.UpdateOne({_id:companyId,createdby:userId},{$pull:{companycodes:{code:code}}})
     throw new InternalServerErrorException("Error sending")
 }
 return true
