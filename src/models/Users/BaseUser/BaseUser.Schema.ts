@@ -109,7 +109,7 @@ UserSchema.pre('save',async function()
 {
   if (this.password) 
   {
-  this.password = await bcrypt.hash(this.password, 10);
+  this.password = await bcrypt.hash(this.password,10);
   }
     
   if (this.phoneNumber) 
@@ -118,3 +118,27 @@ UserSchema.pre('save',async function()
   }
 });
 
+UserSchema.post("find", function(docs:User[]) 
+{
+    for (const doc of docs) 
+    {
+      if (doc.phoneNumber) 
+       {
+        doc.phoneNumber = CryptoJS.AES.decrypt(doc.phoneNumber,key).toString(CryptoJS.enc.Utf8);
+       }
+    }
+});
+
+UserSchema.post("find",function(doc:User) 
+{
+   if (doc.phoneNumber) 
+   {
+    doc.phoneNumber = CryptoJS.AES.decrypt(doc.phoneNumber,key).toString(CryptoJS.enc.Utf8);
+   }
+});
+
+
+UserSchema.virtual("userName").get(function(this:User)
+{
+  return this.firstName+"-"+this.lastName
+})

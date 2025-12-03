@@ -19,7 +19,7 @@ expireAt:Date
 
 
 
-@Schema({ timestamps:{createdAt:true}})
+@Schema({ timestamps:{createdAt:true},toJSON:{virtuals:true},toObject:{virtuals:true}})
 export class Company 
 {
   @Prop({type:String,required:true,unique:true})

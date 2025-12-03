@@ -128,4 +128,21 @@ else
 return true
 }
 
+async GetAllHrAccounts(companyId:Types.ObjectId)
+{
+console.log(companyId)
+const HrList = await this.companyRepository.FindOne({_id:companyId},{Hrs:1 ,createdby:1},{populate:[{path:"Hrs",select:" userName lastName firstName profilePic.URL hireDate  phoneNumber gender permissions _id"},
+ {path:"createdby",select:"firstName profilePic.URL hireDate lastName userName email phoneNumber gender  _id"}]});
+if(!HrList)
+{
+    return []
+}
+else 
+{
+ return HrList  
+}
+}
+
+
+
 }

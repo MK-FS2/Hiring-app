@@ -1,15 +1,23 @@
+/* eslint-disable @typescript-eslint/no-unnecessary-type-assertion */
+import { HRRepository } from './../../models/Users/HR/HR.Repository';
 import { MailService } from '@Shared/Utils';
 import { Types } from 'mongoose';
 import { Injectable, InternalServerErrorException, NotFoundException } from '@nestjs/common';
 import { CompanyRepository } from '@Models/Company';
-import { CodeDTO } from './dto';
+import { CodeDTO, PermissionsDTO } from './dto';
 import { nanoid } from 'nanoid';
+import { HR } from '@Models/Users';
+
+
 
 @Injectable()
 export class MangerService 
 {
 
-constructor(private readonly companyRepository:CompanyRepository,private readonly mailService:MailService){}
+constructor(private readonly companyRepository:CompanyRepository,
+private readonly mailService:MailService,
+private readonly hrRepository:HRRepository
+){}
 
 async GenerateSignUpCode(codeDTO:CodeDTO,userId:Types.ObjectId,companyId:Types.ObjectId)
 {
@@ -38,6 +46,30 @@ if(!sendingResult)
 return true
 }
 
+async GrantPermtions(permissionsDTO:PermissionsDTO,companyId:Types.ObjectId)
+{
+const hrExist = await this.companyRepository.FindOne({_id:companyId,Hrs: new Types.ObjectId(permissionsDTO.hrId)},{"Hrs.$":1},{populate:{path:"Hrs",select:"permissions"}});
+
+if(!hrExist)
+{
+    throw new NotFoundException("No Hr found")
+}
+
+if (!hrExist.Hrs || hrExist.Hrs.length === 0) 
+{
+  throw new Error("HR not found");
+}
+
+const hr = hrExist.Hrs![0] as unknown as HR; const mergedPermissions = Array.from(new Set([...(hr?.permissions || []),...permissionsDTO.Permissions]));
+
+
+const addingResult = await this.hrRepository.UpdateOne({_id:new Types.ObjectId(permissionsDTO.hrId)},{$set:{permissions:mergedPermissions}}) 
+if(!addingResult)
+{
+    throw new InternalServerErrorException("Error updating")
+}
+return true
+}
 
 
 }

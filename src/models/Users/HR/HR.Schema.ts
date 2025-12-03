@@ -4,7 +4,7 @@ import { FileSchema } from "@Models/common";
 import { SchemaTypes, Types } from "mongoose";
 import { Genders, HRPermissions, UserAgent } from "@Shared/Enums";
 
-@Schema({timestamps:{createdAt:true}})
+@Schema({timestamps:{createdAt:true},toJSON:{virtuals:true},toObject:{virtuals:true}})
 export class HR 
 {
 readonly Role?: string;

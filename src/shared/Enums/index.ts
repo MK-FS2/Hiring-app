@@ -21,16 +21,16 @@ ForgetPassword
 
 export enum HRPermissions 
 {
-  PostJobs,
-  EditJobs ,
-  DeleteJobs,
+  PostJobs="PostJobs",
+  EditJobs="EditJobs",
+  DeleteJobs="DeleteJobs",
 
-  ViewApplicants,
-  AcceptApplicants,
-  RejectApplicants,
+  ViewApplicants="ViewApplicants",
+  AcceptApplicants="AcceptApplicants",
+  RejectApplicants="RejectApplicants",
 
-  ViewReports ,
-  ManageInterviews 
+  ViewReports="ViewReports",
+  ManageInterviews="ManageInterviews" 
 }
 
 export enum IndustriesFeilds

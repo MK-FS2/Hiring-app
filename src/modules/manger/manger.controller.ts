@@ -1,10 +1,11 @@
-import { Body, ConflictException, Controller, InternalServerErrorException, Post, UseGuards } from '@nestjs/common';
+import { Body, ConflictException, Controller, InternalServerErrorException, Post, Put, UseGuards } from '@nestjs/common';
 import { MangerService } from './manger.service';
 import { FullGuard, UserData } from '@Shared/Decorators';
 import { Roles } from '@Shared/Enums';
-import { CodeDTO } from './dto';
+import { CodeDTO, PermissionsDTO } from './dto';
 import { Types } from 'mongoose';
 import { ApprovedCompanyGuard, IsEmployeeGuard} from '@Shared/Guards';
+
 
 
 
@@ -27,5 +28,14 @@ const Result = await this.mangerService.GenerateSignUpCode(codeDTO,userID,compan
 if(!Result) throw new InternalServerErrorException("Internal Server Error")
 return {message:"code sent succsessfully"}
 }
+
+@Put("GrantPermissions")
+async GrantPermissions(@Body()permissionsDTO:PermissionsDTO,@UserData("companyId")companyId:Types.ObjectId,)
+{
+const Result =  await this.mangerService.GrantPermtions(permissionsDTO,companyId)
+if(!Result) throw new InternalServerErrorException("Internal Server Error")
+return {message:"succsessfully granted"}
+}
+
 
 }

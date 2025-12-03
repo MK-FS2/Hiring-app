@@ -1,15 +1,14 @@
 import { CompanyFactory } from './factory/index';
 import { Types } from 'mongoose';
-import { Body, Controller, InternalServerErrorException, Post, Put, UseInterceptors} from '@nestjs/common';
+import { Body, Controller, Get, InternalServerErrorException, Post, Put, UseInterceptors} from '@nestjs/common';
 import { CompanyService } from './company.service';
-import { FileData, FullGuard, UserData } from '@Shared/Decorators';
+import { FileData, FullGuard, RolesAllowed, UserData } from '@Shared/Decorators';
 import { CompanyImageFlag, Filecount, Roles } from '@Shared/Enums';
 import { CreateCompanyDTO } from './dto';
 import { FileTypes } from '@Shared/Helpers';
 import { FilesInterceptor } from '@Shared/Interceptors';
 
 
-  // to do add decrate is company owner
 
 @FullGuard(Roles.Manger) 
 @Controller('company')
@@ -48,12 +47,22 @@ const Result = await this.companyService.UpdateCompanyImage(coverPic,companyId,C
 
 @UseInterceptors(new FilesInterceptor([{Filecount:Filecount.File,Optional:false,Size:1*1024*1024,FileType:FileTypes.Image,FieldName:'logo'}]))
 @Put("updateLogo")
-async UpdateLogo(@FileData({optional:false,filecount:Filecount.File,fieldname:"logo"})coverPic:Express.Multer.File,@UserData("companyId")companyId:Types.ObjectId)
+async UpdateLogo(@FileData({optional:false,filecount:Filecount.File,fieldname:"logo"})logo:Express.Multer.File,@UserData("companyId")companyId:Types.ObjectId)
 {
-const Result = await this.companyService.UpdateCompanyImage(coverPic,companyId,CompanyImageFlag.logo)
+const Result = await this.companyService.UpdateCompanyImage(logo,companyId,CompanyImageFlag.logo)
   if(!Result) throw new InternalServerErrorException("Internal Server Error")
   return {message:" Updated image Successfully",status:200}
 }
+
+
+@RolesAllowed(Roles.HR)
+@Get("getAllHrs")
+async GetAllHRs(@UserData("companyId")companyId:Types.ObjectId)
+{
+const Data = await this.companyService.GetAllHrAccounts(companyId)
+return Data
+}
+
 
 
 
