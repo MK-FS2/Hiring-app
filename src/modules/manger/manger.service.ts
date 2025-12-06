@@ -1,12 +1,15 @@
-/* eslint-disable @typescript-eslint/no-unnecessary-type-assertion */
-import { HRRepository } from './../../models/Users/HR/HR.Repository';
+
+/* eslint-disable @typescript-eslint/no-unnecessary-type-assertion */import { HRRepository } from './../../models/Users/HR/HR.Repository';
 import { MailService } from '@Shared/Utils';
 import { Types } from 'mongoose';
-import { Injectable, InternalServerErrorException, NotFoundException } from '@nestjs/common';
+import { ConflictException, Injectable, InternalServerErrorException, NotFoundException } from '@nestjs/common';
 import { CompanyRepository } from '@Models/Company';
 import { CodeDTO, PermissionsDTO } from './dto';
 import { nanoid } from 'nanoid';
 import { HR } from '@Models/Users';
+import { RevokePermissionDTO } from './dto/revokepermission.dto';
+import { CloudServices } from '@Shared/Utils/Cloud';
+import { FolderTypes } from '@Shared/Enums';
 
 
 
@@ -16,7 +19,8 @@ export class MangerService
 
 constructor(private readonly companyRepository:CompanyRepository,
 private readonly mailService:MailService,
-private readonly hrRepository:HRRepository
+private readonly hrRepository:HRRepository,
+private readonly cloudServices:CloudServices
 ){}
 
 async GenerateSignUpCode(codeDTO:CodeDTO,userId:Types.ObjectId,companyId:Types.ObjectId)
@@ -60,7 +64,8 @@ if (!hrExist.Hrs || hrExist.Hrs.length === 0)
   throw new Error("HR not found");
 }
 
-const hr = hrExist.Hrs![0] as unknown as HR; const mergedPermissions = Array.from(new Set([...(hr?.permissions || []),...permissionsDTO.Permissions]));
+const hr = hrExist.Hrs![0] as unknown as HR; 
+const mergedPermissions = Array.from(new Set([...(hr?.permissions || []),...permissionsDTO.Permissions]));
 
 
 const addingResult = await this.hrRepository.UpdateOne({_id:new Types.ObjectId(permissionsDTO.hrId)},{$set:{permissions:mergedPermissions}}) 
@@ -71,5 +76,58 @@ if(!addingResult)
 return true
 }
 
+async RevokePermtions(permissionDTO:RevokePermissionDTO,companyId:Types.ObjectId) 
+{
+console.log(companyId)
+const hr = await this.hrRepository.FindOne({companyId:companyId,_id:permissionDTO.hrId},{permissions:1})
+if(!hr)
+{
+    throw new NotFoundException("No Hr found")
+}
+const permissions = hr.permissions
+if(!permissions || permissions.length ==0 || !permissions.includes(permissionDTO.permission))
+{
+    throw new ConflictException("There are no permtions to revoke")
+}
 
+const revokingResult = await this.hrRepository.UpdateOne({_id:permissionDTO.hrId,companyId},{$pull:{permissions:permissionDTO.permission}})
+if(!revokingResult)
+{
+    throw new InternalServerErrorException("Error updating")
+}
+return true
+}
+
+async DeleteHR(hrId:Types.ObjectId,companyId:Types.ObjectId)
+{
+const hrExist = await this.hrRepository.FindOne({_id:hrId,companyId})
+if(!hrExist)
+{
+    throw new NotFoundException("No Hr found")
+}
+
+const removingResult = await this.companyRepository.UpdateOne({_id:companyId},{$pull:{Hrs:hrId}})
+
+if(!removingResult)
+{
+    throw new InternalServerErrorException("updating Error")
+}
+
+
+const deletionResult = await this.hrRepository.DeleteOne({_id:hrId,companyId})
+if(!deletionResult)
+{
+    await this.companyRepository.UpdateOne({_id:companyId},{$push:{Hrs:hrId}})
+    throw new InternalServerErrorException("Error deleting")
+}
+
+const folder = `${FolderTypes.App}/${FolderTypes.Users}/${hrExist._id.toString()}`
+await this.cloudServices.deleteFolder(folder)
+
+
+const messageContent = `Your Postion in the company has been terminated`
+//  to refactor the message service later
+await this.mailService.sendMail(hrExist.email,messageContent,new Date(Date.now()+10*60*1000))
+return true
+}
 }
