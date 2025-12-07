@@ -18,7 +18,6 @@ ForgetPassword
 }
 
 
-
 export enum HRPermissions 
 {
   PostJobs="PostJobs",
@@ -101,4 +100,36 @@ export enum CompanyImageFlag
 {
   coverPic = "coverPic",
   logo = "logo"
+}
+
+export enum CarerExperienceLevels 
+{
+  INTERN = 'intern',
+  JUNIOR = 'junior',
+  MID = 'mid',
+  SENIOR = 'senior',
+  LEAD = 'lead',
+  MANAGER = 'manager'
+}
+
+export enum WorkplaceTypes {
+  ONSITE = 'onsite',
+  REMOTE = 'remote',
+  HYBRID = 'hybrid'
+}
+
+
+export enum Currencies
+{
+  USD = '$',    
+  EUR = '€',     
+  EGP = 'E£',    
+  SAR = '⃁',       
+}
+
+export enum JobStatus 
+{
+  Open = "open",
+  Closed = "closed",
+  UnderReview = "under_review"
 }
