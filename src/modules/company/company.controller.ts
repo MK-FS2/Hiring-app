@@ -1,6 +1,6 @@
 import { CompanyFactory } from './factory/index';
 import { Types } from 'mongoose';
-import { Body, Controller, Get, InternalServerErrorException, Post, Put, UseInterceptors} from '@nestjs/common';
+import { Body, Controller, Get, InternalServerErrorException, Post, Put, Query, UseInterceptors} from '@nestjs/common';
 import { CompanyService } from './company.service';
 import { FileData, FullGuard, RolesAllowed, UserData } from '@Shared/Decorators';
 import { CompanyImageFlag, Filecount, Roles } from '@Shared/Enums';
@@ -63,7 +63,12 @@ const Data = await this.companyService.GetAllHrAccounts(companyId)
 return Data
 }
 
-
-
+@RolesAllowed(Roles.HR)
+@Get("AllJobsUnderReview")
+async GetAllJobsUnderReview(@UserData("companyId")companyId:Types.ObjectId,@UserData("Role")role:Roles,@Query("page")page:number=1,@Query("limit")limit:number=10)
+{
+const Data = await this.companyService.GetAllJobsUnderReview(companyId,role,page,limit)
+return Data
+}
 
 }

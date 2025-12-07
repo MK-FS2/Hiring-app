@@ -1,15 +1,15 @@
-
 /* eslint-disable @typescript-eslint/no-unnecessary-type-assertion */import { HRRepository } from './../../models/Users/HR/HR.Repository';
 import { MailService } from '@Shared/Utils';
+import { JobRepository } from '@Models/Job';
 import { Types } from 'mongoose';
-import { ConflictException, Injectable, InternalServerErrorException, NotFoundException } from '@nestjs/common';
+import { ConflictException, Injectable, InternalServerErrorException, NotFoundException,BadGatewayException } from '@nestjs/common';
 import { CompanyRepository } from '@Models/Company';
-import { CodeDTO, PermissionsDTO } from './dto';
+import { CodeDTO, PermissionsDTO, ReviewJobDTO } from './dto';
 import { nanoid } from 'nanoid';
 import { HR } from '@Models/Users';
 import { RevokePermissionDTO } from './dto/revokepermission.dto';
 import { CloudServices } from '@Shared/Utils/Cloud';
-import { FolderTypes } from '@Shared/Enums';
+import { FolderTypes, JobStatus } from '@Shared/Enums';
 
 
 
@@ -20,7 +20,8 @@ export class MangerService
 constructor(private readonly companyRepository:CompanyRepository,
 private readonly mailService:MailService,
 private readonly hrRepository:HRRepository,
-private readonly cloudServices:CloudServices
+private readonly cloudServices:CloudServices,
+private readonly jobRepository:JobRepository
 ){}
 
 async GenerateSignUpCode(codeDTO:CodeDTO,userId:Types.ObjectId,companyId:Types.ObjectId)
@@ -128,6 +129,37 @@ await this.cloudServices.deleteFolder(folder)
 const messageContent = `Your Postion in the company has been terminated`
 //  to refactor the message service later
 await this.mailService.sendMail(hrExist.email,messageContent,new Date(Date.now()+10*60*1000))
+return true
+}
+
+async ReviewPostedJob(reviewJobDTO:ReviewJobDTO,companyId:Types.ObjectId,jobId:Types.ObjectId)
+{
+const jobExist = await this.jobRepository.FindOne({companyId,_id:jobId})
+if(!jobExist)
+{
+    throw new BadGatewayException("No job found")
+}
+if(jobExist.status == JobStatus.Open)
+{
+ throw new BadGatewayException("Job alredy reviewd")
+}
+
+if(reviewJobDTO.approval)
+{
+const result = await this.jobRepository.UpdateOne({_id:jobId,companyId},{$set:{status:JobStatus.Open,isActive:true},$unset:{mangerAlert:"",hrAlert:"",hrAlertNote:""}})
+if(!result)
+{
+    throw new InternalServerErrorException("Error updating")
+}
+}
+else 
+{
+    const result  = await this.jobRepository.UpdateOne({_id:jobId,companyId},{$set:{mangerAlert:false,hrAlert:true,hrAlertNote:reviewJobDTO.note}})
+    if(!result)
+{
+    throw new InternalServerErrorException("Error updating")
+}
+}
 return true
 }
 }

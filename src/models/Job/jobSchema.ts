@@ -88,8 +88,27 @@ export class Job
   @Prop({type:String,enum:Degrees,required:true})
   degree:Degrees
 
+  //  true mean show for manger aler so he/she can review 
+  @Prop({type:Boolean,required:false,default:true})
+  mangerAlert?:boolean
+
+  //true mean show for hr aler so he/she can edit 
   @Prop({type:Boolean,required:false,default:false})
-  MangerAlert?:boolean
+  hrAlert?:boolean
+
+  @Prop({type:String,required:function(this:Job)
+  {
+  if(this.hrAlert == true)
+  {
+    return true
+  }
+  else 
+  {
+    return false
+  }
+  }
+  })
+  hrAlertNote?:string
 }
 
 

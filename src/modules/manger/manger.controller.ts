@@ -2,7 +2,7 @@ import { Body, ConflictException, Controller, Delete, InternalServerErrorExcepti
 import { MangerService } from './manger.service';
 import { FullGuard, UserData } from '@Shared/Decorators';
 import { Roles } from '@Shared/Enums';
-import { CodeDTO, PermissionsDTO } from './dto';
+import { CodeDTO, PermissionsDTO, ReviewJobDTO } from './dto';
 import { Types } from 'mongoose';
 import { ApprovedCompanyGuard, IsEmployeeGuard} from '@Shared/Guards';
 import { RevokePermissionDTO } from './dto/revokepermission.dto';
@@ -57,4 +57,12 @@ if(!Result) throw new InternalServerErrorException("Internal Server Error")
 return {message:"Hr deleted succsessfully"}
 }
 
+
+@Put("reviewPostedJob/:jobId")
+async ReviewPostedJob(@Body()reviewJobDTO:ReviewJobDTO,@UserData("companyId")companyId:Types.ObjectId,@Param("jobId",ValidMongoID)jobId:Types.ObjectId)
+{
+const Result = await this.mangerService.ReviewPostedJob(reviewJobDTO,companyId,jobId)
+if(!Result) throw new InternalServerErrorException("Internal Server Error")
+return {message:"Reviewed successfully"}
+}
 }

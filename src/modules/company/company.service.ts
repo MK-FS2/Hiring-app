@@ -1,11 +1,14 @@
+import { HydratedDocument } from 'mongoose';
+import { JobRepository } from './../../models/Job/jobRepository';
 import { CloudServices } from '@Shared/Utils/Cloud';
 import { MangerRepository } from '@Models/Users';
 import { ConflictException, Injectable, InternalServerErrorException} from '@nestjs/common';
 import { Types } from 'mongoose';
 import { CreateCompanyEntity } from './entity';
 import { CompanyRepository } from '@Models/Company';
-import { CompanyImageFlag, FolderTypes } from '@Shared/Enums';
+import { CompanyImageFlag, FolderTypes, JobStatus, Roles } from '@Shared/Enums';
 import { FileSchema } from '@Models/common';
+import { Job } from '@Models/Job';
 
 
 @Injectable()
@@ -13,7 +16,8 @@ export class CompanyService
 {
 constructor(private readonly companyRepository:CompanyRepository,
 private readonly mangerRepository:MangerRepository,
-private readonly cloudServices:CloudServices
+private readonly cloudServices:CloudServices,
+private readonly jobRepository:JobRepository
 ){}
 
 
@@ -143,6 +147,26 @@ else
 }
 }
 
+async GetAllJobsUnderReview(companyId:Types.ObjectId,role:Roles,page:number,limit:number)
+{
+
+const skip = (page-1)*limit
+let jobs:HydratedDocument<Job>[]|null = null
+
+if(role == Roles.Manger)
+{
+jobs = await this.jobRepository.Find({companyId,status:JobStatus.UnderReview},{hrAlertNote:0},{skip:skip,limit:limit,populate:{path:"createdBy",select:"firstName profilePic.URL hireDate lastName userName email phoneNumber gender  _id"}})
+}
+else 
+{
+ jobs = await this.jobRepository.Find({companyId,status:JobStatus.UnderReview},{mangerAlert:0},{skip:skip,limit:limit,populate:{path:"createdBy",select:"firstName profilePic.URL hireDate lastName userName email phoneNumber gender  _id"}})   
+}
 
 
+if(!jobs)
+{
+    return []
+}
+  return jobs
+}
 }
