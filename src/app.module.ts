@@ -7,6 +7,7 @@ import { GlobalModule } from '@Shared/Modules';
 import { CompanyModule } from './modules/company/company.module';
 import { MangerModule } from './modules/manger/manger.module';
 import { HrModule } from './modules/hr/hr.module';
+import { ApplicantModule } from './modules/applicant/applicant.module';
 
 @Module(
 {
@@ -18,7 +19,8 @@ import { HrModule } from './modules/hr/hr.module';
   AuthModule,
   CompanyModule,
   MangerModule,
-  HrModule
+  HrModule,
+  ApplicantModule
 
   ],
   controllers: []

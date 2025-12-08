@@ -155,11 +155,11 @@ let jobs:HydratedDocument<Job>[]|null = null
 
 if(role == Roles.Manger)
 {
-jobs = await this.jobRepository.Find({companyId,status:JobStatus.UnderReview},{hrAlertNote:0},{skip:skip,limit:limit,populate:{path:"createdBy",select:"firstName profilePic.URL hireDate lastName userName email phoneNumber gender  _id"}})
+jobs = await this.jobRepository.Find({companyId,status:JobStatus.UnderReview},{hrAlertNote:0},{skip:skip,limit:limit,populate:[{path:"createdBy",select:"firstName profilePic.URL hireDate lastName userName email phoneNumber gender  _id"},{path:'updatedBy',select:"firstName profilePic.URL hireDate lastName userName email phoneNumber gender  _id"}]})
 }
 else 
 {
- jobs = await this.jobRepository.Find({companyId,status:JobStatus.UnderReview},{mangerAlert:0},{skip:skip,limit:limit,populate:{path:"createdBy",select:"firstName profilePic.URL hireDate lastName userName email phoneNumber gender  _id"}})   
+ jobs = await this.jobRepository.Find({companyId,status:JobStatus.UnderReview},{mangerAlert:0},{skip:skip,limit:limit,populate:[{path:"createdBy",select:"firstName profilePic.URL hireDate lastName userName email phoneNumber gender  _id"},{path:'updatedBy',select:"firstName profilePic.URL hireDate lastName userName email phoneNumber gender  _id"}]})   
 }
 
 
@@ -168,5 +168,20 @@ if(!jobs)
     return []
 }
   return jobs
+}
+
+async GetAllActiveJobs(companyId:Types.ObjectId,page:number,limit:number)
+{
+const skip = (page-1)*limit
+console.log(skip)
+const jobs = await this.jobRepository.Find({companyId,status:JobStatus.Open},{},{skip:skip,limit:limit,populate:[{path:"createdBy",select:"firstName profilePic.URL hireDate lastName userName email phoneNumber gender  _id"},{path:'updatedBy',select:"firstName profilePic.URL hireDate lastName userName email phoneNumber gender  _id"}]})
+if(!jobs)
+{
+    return []
+}
+else 
+{
+ return jobs
+}
 }
 }

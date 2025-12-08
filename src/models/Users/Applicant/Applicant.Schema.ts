@@ -11,7 +11,7 @@ import { Degrees, Genders, IndustriesFeilds, UserAgent } from "@Shared/Enums";
 export class EducationSchema 
 {
 @Prop({type:String,enum:Degrees,required:true})
-dgree: Degrees
+degree: Degrees
 
 @Prop({type:String,required:true,minLength:[2,"Minimum of 2 charcters"],maxLength:[100,"Maximum of 100 chracters"]})
 institution:string

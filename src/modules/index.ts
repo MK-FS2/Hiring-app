@@ -1,2 +1,5 @@
 export * from "./auth"
 export * from "./company"
+export * from "./hr"
+export * from "./manger"
+export * from "./applicant"

@@ -17,8 +17,8 @@ export class Job
   @Prop({type:[String],default:[]})
   skills: string[];
 
-  @Prop({type:String,required:true,enum:Currencies})
-  currency: Currencies;
+  @Prop({type:String,required:false,enum:Currencies})
+  currency?:Currencies;
 
   @Prop({type:String,required:true,enum:WorkplaceTypes})
   workplaceType:WorkplaceTypes;
@@ -66,7 +66,7 @@ export class Job
   @Prop({type:SchemaTypes.ObjectId,required:true,ref:"HR"})
   createdBy:Types.ObjectId;
 
-  @Prop({type:SchemaTypes.ObjectId,required:false,ref:"Hr"})
+  @Prop({type:SchemaTypes.ObjectId,required:false,ref:"HR"})
   updatedBy?:Types.ObjectId;
 
   @Prop({type:SchemaTypes.ObjectId,required:true,ref:"Company"})

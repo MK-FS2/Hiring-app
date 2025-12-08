@@ -1,6 +1,7 @@
+import { UpdateJobDTO } from './../dto/updateJob.dto';
 import { Injectable } from "@nestjs/common";
 import { AddJobDTO } from "../dto";
-import { AddJobEntity } from "../entity";
+import { AddJobEntity, UpdateJobEntity } from "../entity";
 import { Types } from "mongoose";
 
 
@@ -25,11 +26,11 @@ export class HRFactory
      {
       job.maxSalary =addJobDTO.maxsalary
       job.minSalary =addJobDTO.mingsalary  
+      job.currency = addJobDTO.currency
      }
 
      job.skills = addJobDTO.skills
-     job.experienceLevel =addJobDTO.experienceLevel
-     job.currency = addJobDTO.currency 
+     job.experienceLevel =addJobDTO.experienceLevel 
      job.companyId = companyId
      job.createdBy = creatorId
      job.deadline = addJobDTO.deadline
@@ -37,6 +38,35 @@ export class HRFactory
      return job
     }
 
+ UpdateJob(updateJobDTO:UpdateJobDTO, editorId:Types.ObjectId) 
+ {
+  const job = new UpdateJobEntity();
 
+  if (updateJobDTO.title) job.title = updateJobDTO.title;
+  if (updateJobDTO.description) job.description = updateJobDTO.description;
+  if (updateJobDTO.requirements) job.requirements = updateJobDTO.requirements;
+  if (updateJobDTO.skills) job.skills = updateJobDTO.skills;
+  if (updateJobDTO.city) job.city = updateJobDTO.city;
+  if (updateJobDTO.country) job.country = updateJobDTO.country;
+
+  if (updateJobDTO.maxsalary) 
+ {
+    job.maxSalary = updateJobDTO.maxsalary;
+    job.minSalary = updateJobDTO.mingsalary;
+    job.currency = updateJobDTO.currency;
+  }
+
+  if (updateJobDTO.maxYears !== undefined) job.maxYears = updateJobDTO.maxYears;
+  if (updateJobDTO.minYears !== undefined) job.minYears = updateJobDTO.minYears;
+
+  if (updateJobDTO.workplaceType) job.workplaceType = updateJobDTO.workplaceType;
+  if (updateJobDTO.industry) job.industry = updateJobDTO.industry;
+  if (updateJobDTO.experienceLevel) job.experienceLevel = updateJobDTO.experienceLevel;
+  if (updateJobDTO.degree) job.degree = updateJobDTO.degree;
+
+  job.updatedBy = editorId;
+
+  return job;
+}
 
 }

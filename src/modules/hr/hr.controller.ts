@@ -1,11 +1,12 @@
 import { HRFactory } from './factory/index';
-import {Body, Controller,InternalServerErrorException,Post,UseGuards} from '@nestjs/common';
+import {Body, Controller,InternalServerErrorException,Param,Post,Put,UseGuards} from '@nestjs/common';
 import {HrService} from './hr.service';
 import {FullGuard, SetPermissions, UserData} from '@Shared/Decorators';
 import {ApprovedCompanyGuard,HRPermissionGuard, IsEmployeeGuard } from '@Shared/Guards';
 import {HRPermissions, Roles} from '@Shared/Enums';
-import { AddJobDTO } from './dto';
+import { AddJobDTO, UpdateJobDTO } from './dto';
 import { Types } from 'mongoose';
+import { ValidMongoID } from '@Shared/Pipes';
 
 
 @UseGuards(ApprovedCompanyGuard,IsEmployeeGuard,HRPermissionGuard)
@@ -27,5 +28,17 @@ export class HrController
  if(!Result) throw new InternalServerErrorException("Internal Server Error")
  return {message:"Created Successfully",status:200}
  }
+
+
+@SetPermissions(HRPermissions.EditJobs)
+@Put("updateJob/:jobId")
+async UpdateJob(@Body()updateJobDTO:UpdateJobDTO,@UserData("_id")editorId:Types.ObjectId,@Param("jobId",ValidMongoID)jobId:Types.ObjectId,@UserData("companyId")companyId:Types.ObjectId)
+{
+const job = this.hrFactory.UpdateJob(updateJobDTO,editorId)
+const Result = await this.hrService.UpdateJob(job,jobId,companyId)
+ if(!Result) throw new InternalServerErrorException("Internal Server Error")
+ return {message:"Updated Successfully",status:200}
+}
+
 
 }
