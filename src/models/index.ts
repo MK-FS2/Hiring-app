@@ -3,3 +3,5 @@ export * from "./common"
 export * from "./AbstractRepository"
 export * from "./Company"
 export * from "./Token"
+export * from "./Application"
+

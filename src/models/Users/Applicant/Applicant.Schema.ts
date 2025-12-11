@@ -36,7 +36,15 @@ endDate:Date
 }
 
 
+@Schema()
+export class CvSchema
+{
+  @Prop({type:String,required:true})
+  cvName:string
 
+  @Prop({type:FileSchema,required:true})
+  cvFile:FileSchema
+}
 
 
 @Schema({timestamps:{createdAt:true}})
@@ -64,7 +72,6 @@ changedCredentialsAt?:Date;
 @Prop({type: String,enum:IndustriesFeilds,required: function(this:Applicant) { return this.provider === UserAgent.System; } })
 industry?:IndustriesFeilds
 
-
 @Prop({ type: String, required: function(this: Applicant) { return this.provider === UserAgent.System; }, minlength: [2, "Minimum of 2 characters"], maxlength: [100, "Maximum of 100 characters"] })
 titel?:string
 
@@ -76,26 +83,21 @@ titel?:string
 })
 skills?:string[];
 
-@Prop({type: String,required: false,minlength: [10,'Minimum of 10 characters required'],maxlength: [400,'Maximum of 200 characters allowed']})
-description?: string;
+@Prop({type: String,required:false})
+description?:string;
 
 @Prop({type:[FileSchema],required:false})
 certifications?:FileSchema[]
 
 
-@Prop({type: [FileSchema],required: false,validate:
-{
-validator: (value: FileSchema[]) => !value || value.length <= 3,
-message: 'A maximum of 3 CVs is allowed',
-},
-})
-CVS?: FileSchema[];
+@Prop({type:[CvSchema],required:false})
+CVS?: CvSchema[];
 
 
 @Prop({type:[EducationSchema],required:false})
 education?:EducationSchema[]
 
-@Prop({type:String,required:false})
+@Prop({type:String,required:false,maxLength:[50,"Maximum of 50 characters"]})
 coverLetter?:string
 
 

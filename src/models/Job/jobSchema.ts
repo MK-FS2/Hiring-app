@@ -45,10 +45,10 @@ export class Job
   })
   maxYears: number;
 
-  @Prop({type: Number,required: function(this: Job) {return !!this.minSalary;}})
+  @Prop({type: Number,required:false})
   maxSalary?: number;
 
-  @Prop({type: Number,required: function(this: Job) {return !!this.maxSalary;}})
+  @Prop({type: Number,required:false})
   minSalary?: number;
 
   @Prop({type:String,required:true,enum:IndustriesFeilds})
@@ -72,7 +72,7 @@ export class Job
   @Prop({type:SchemaTypes.ObjectId,required:true,ref:"Company"})
   companyId:Types.ObjectId;
 
-  @Prop({type:Date,required:false,default:new Date(Date.now())})
+  @Prop({type:Date,required:false,default:new Date()})
   createdAt?:Date;
 
   @Prop({type:Boolean,required:false,default:false})

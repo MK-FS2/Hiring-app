@@ -29,7 +29,7 @@ export class HRFactory
       job.currency = addJobDTO.currency
      }
 
-     job.skills = addJobDTO.skills
+     job.skills = addJobDTO.skills.map((skill)=>skill.toUpperCase())
      job.experienceLevel =addJobDTO.experienceLevel 
      job.companyId = companyId
      job.createdBy = creatorId

@@ -1,2 +1,6 @@
 export * from "./addEducation.dto"
 export * from "./updateEducation.dto"
+export * from "./skill.dto"
+export * from "./applicanCv.dto"
+export * from "./coverLetter.dto"
+export * from "./description.dto"

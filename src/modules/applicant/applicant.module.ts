@@ -8,7 +8,7 @@ import { ApplicantFactory } from './factory';
 
 
 @Module({
-  imports:[HrModule,CommonUserModule],
+  imports:[HrModule,CommonUserModule,HrModule],
   controllers:[ApplicantController],
   providers: [ApplicantService,ApplicantFactory],
 })
