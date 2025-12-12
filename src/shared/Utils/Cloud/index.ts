@@ -50,7 +50,6 @@ async deleteFolder(folder:string): Promise<boolean>
   }
  }
 
-  // Upload a single file
 async uploadOne(filePath: string, folder: string): Promise<FileSchema|null> 
   {
     try 

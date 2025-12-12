@@ -34,9 +34,6 @@ export class Company
   @Prop({ type:String, enum: IndustriesFeilds,required:true})
   indstry: IndustriesFeilds;
 
-  @Prop({type:Number,required:false})
-  numberofemployees?: number;
-
   @Prop({type:Types.ObjectId,required:true,ref:"Manger"})
   createdby?:Types.ObjectId;
 
@@ -49,7 +46,7 @@ export class Company
   @Prop({type:FileSchema,required:false})
   coverPic?:FileSchema;
 
-  @Prop({type:[Types.ObjectId],required:false,ref:"HR"})
+  @Prop({type:[Types.ObjectId],required:false,ref:"HR",default:[]})
   Hrs?:Types.ObjectId[];
 
   @Prop({type:[FileSchema],required:false})
@@ -61,6 +58,9 @@ export class Company
   @Prop({type:Date,required:false})
   bannedAt?:Date;
 
+  @Prop({type:Boolean,required:false,default:false})
+  isbanned?:boolean
+
   @Prop({type:Date,required:false})
   deletedAt?: Date;
 
@@ -71,3 +71,24 @@ export class Company
 }
 
 export const CompanySchema = SchemaFactory.createForClass(Company);
+
+CompanySchema.virtual("numberofemployees").get(function(this:Company)
+{
+
+  let employeeNumber:number = 0  
+  
+  if(!this.Hrs)
+  {
+  employeeNumber = 0
+  }
+  else 
+  {
+    employeeNumber = this.Hrs.length
+  }
+
+ return `${1}-${employeeNumber+1}`
+})
+
+
+
+  

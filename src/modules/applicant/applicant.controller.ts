@@ -1,15 +1,16 @@
 import { ApplicantFactory } from './factory/index';
-import { Body, Controller, Delete, Get, InternalServerErrorException, Param, ParseIntPipe, Post, Put, Query, UseInterceptors } from '@nestjs/common';
+import { Body, Controller, Delete, Get, InternalServerErrorException, Param, Post, Put, Query, UseGuards, UseInterceptors } from '@nestjs/common';
 import { ApplicantService } from './applicant.service';
 import { FileData, FullGuard, UserData } from '@Shared/Decorators';
-import { Degrees, Filecount, IndustriesFeilds, Roles } from '@Shared/Enums';
-import { SkillDTO, EducationDTO, UpdateEducationDTO, CvDTO, CoverLetterDTO, DescriptionDTO } from './dto';
+import { CarerExperienceLevels, Degrees, Filecount, Genders, IndustriesFeilds, Roles, WorkplaceTypes } from '@Shared/Enums';
+import { SkillDTO, EducationDTO, UpdateEducationDTO, CvDTO, CoverLetterDTO, DescriptionDTO} from './dto';
 import { Types } from 'mongoose';
 import { ValidMongoID } from '@Shared/Pipes';
 import { FilesInterceptor } from '@Shared/Interceptors';
 import { FileTypes } from '@Shared/Helpers';
 import { EducationSchema } from '@Models/Users';
-import { JobQueryParameters } from '@Shared/Interfaces';
+import { applicantData, JobQueryParameters } from '@Shared/Interfaces';
+import { AppliedBefore } from '@Shared/Guards';
 
 
 @FullGuard(Roles.Applicant)
@@ -129,11 +130,21 @@ return {message:"Description Added Successfully",status:200}
 
 @Get("applicantJobs")
 async GetApplicantJobs(
-@Query("page",ParseIntPipe)page:number=1,
-@Query("limit",ParseIntPipe)limit:number=10,
 @UserData("skills")applicantSkills:string[],
 @UserData("education")education:EducationSchema[],
-@UserData("industry")applicantIndustry:IndustriesFeilds)
+@UserData("industry")applicantIndustry:IndustriesFeilds,
+@Query("page",) page: number=1,
+@Query("limit") limit: number=10,
+@Query("jobTitle") jobTitle?: string,
+@Query("experienceLevel") experienceLevel?:CarerExperienceLevels,
+@Query("maxYear") maxYear?: number,
+@Query("minYear") minYear?: number,
+@Query("city") city?: string,
+@Query("country") country?: string,
+@Query("workplaceType") workplaceType?: WorkplaceTypes,
+@Query("minSalary") minSalary?: number,
+@Query("maxSalary") maxSalary?: number,
+)
 {
  let applicanDegrees: Degrees[] = [];
  if(education.length > 0 )
@@ -141,23 +152,74 @@ async GetApplicantJobs(
   applicanDegrees = education.map((ed)=> ed.degree)
  }
 
-const queryParameters:JobQueryParameters = 
-{
-  page:page,
-  limit:limit,
-  jobTitle:"",
-  experienceLevel: undefined,
-  maxYear: undefined,
-  minYear: undefined,
-  city: "",
-  country: "",
-  workplaceType: undefined,
-  minSalary: 0,
-  maxSalary: 0,
-};
+  const queryParameters: JobQueryParameters = {
+    page: Number(page) || 1,
+    limit: Number(limit) || 10,
+    jobTitle: jobTitle ?? "",
+    experienceLevel: experienceLevel as any,
+    maxYear: maxYear ? Number(maxYear) : undefined,
+    minYear: minYear ? Number(minYear) : undefined,
+    city: city ?? "",
+    country: country ?? "",
+    workplaceType: workplaceType as any,
+    minSalary: minSalary ? Number(minSalary) : 0,
+    maxSalary: maxSalary ? Number(maxSalary) : 0,
+  };
   const Data = await this.applicantService.GetJobs(applicantIndustry,applicanDegrees,applicantSkills,queryParameters)
   return Data 
 }
+
+@Get("getJobDetails/:jobId")
+async GetJobDetails(@Param("jobId",ValidMongoID)jobId:Types.ObjectId)
+{
+const Data = this.applicantService.GetJobDetails(jobId)
+return Data
+}
+
+
+@Get("companyJobs/:companyId")
+async GetCompanyJobs(@Param("companyId",ValidMongoID)companyId:Types.ObjectId,@Query("page")page:number=1,@Query("limit")limit:number=10)
+{
+const Data = await this.applicantService.GetcompanyJobs(companyId,page,limit)
+return Data
+}
+
+
+@Get("searchCompany/:companyName")
+async SearchCompany(@Param("companyName")companyName:string)
+{
+const Data = await this.applicantService.SearchCompany(companyName)
+return Data
+}
+
+@Post("jobApplication/:jobId")
+@UseGuards(AppliedBefore)
+@UseInterceptors(new FilesInterceptor([{Filecount:Filecount.File,Optional:false,Size:1*1024*1024,FileType:FileTypes.Document,FieldName:'CV'}]))
+async ApplyforJob(
+@UserData("_id")applicantId:Types.ObjectId,
+@UserData("firstName")firstName:string,
+@UserData("lastName")lastName:string,
+@UserData("gender")gender:Genders,
+@UserData("email")email:string,
+@UserData("phoneNumber")phoneNumber:string,
+@Param("jobId",ValidMongoID)jobId:Types.ObjectId,
+@FileData({optional:false,fieldname:"CV",filecount:Filecount.File})CVFile:Express.Multer.File
+)
+{
+ const applicantData:applicantData=
+ {
+  applicantEmail:email,
+  applicantName:firstName+"-"+lastName,
+  applicantgender:gender,
+  applicantPhone:phoneNumber,
+  applicantId:applicantId
+ }
+
+const Result = await this.applicantService.JobApplication(jobId,CVFile,applicantData)
+if(!Result) throw new InternalServerErrorException("Internal Server Error")
+return {message:"certification Added Successfully",status:200}
+}
+
 
 }
 

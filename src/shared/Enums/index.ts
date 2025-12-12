@@ -82,8 +82,8 @@ export const enum FolderTypes {
   Photos = "Photos",
   Documents = "Documents",
   App="Hiring",
-  Companies="Companies"
-
+  Companies="Companies",
+  Applications = " Applications"
 }
 
 
@@ -132,4 +132,14 @@ export enum JobStatus
   Open = "open",
   Closed = "closed",
   UnderReview = "under_review"
+}
+
+
+export enum ApplicationStatus 
+{
+    Pending = "Pending",
+    Under_Reviewed = "Under_Reviewed",
+    Under_Interview = "Under_Interview",
+    Accepted = "Accepted",
+    Rejected = "Rejected"
 }

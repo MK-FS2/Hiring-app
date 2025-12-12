@@ -1,4 +1,6 @@
+import { Genders } from "@Shared/Enums"
 import { JwtPayload } from "jsonwebtoken"
+import { Types } from "mongoose"
 
 export interface ITokenPayload extends JwtPayload
 {
@@ -23,4 +25,13 @@ export interface JobQueryParameters
   workplaceType?: string;
   minSalary?: number;
   maxSalary?: number;
+}
+
+export interface applicantData 
+{
+ applicantName:string
+ applicantEmail:string
+ applicantPhone:string
+ applicantgender:Genders
+ applicantId:Types.ObjectId
 }

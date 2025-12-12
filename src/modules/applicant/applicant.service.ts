@@ -1,3 +1,7 @@
+import { ApplicationRepository } from './../../models/Application/application.Repository';
+import { applicantData } from '@Shared/Interfaces';
+import { ApplicantFactory } from './factory/index';
+import { CompanyRepository } from './../../models/Company/Company.Repository';
 import { JobRepository } from './../../models/Job/jobRepository';
 import { BadGatewayException, BadRequestException, ConflictException, Injectable, InternalServerErrorException, NotFoundException} from '@nestjs/common';
 import { EducationEntity } from './entity';
@@ -5,7 +9,7 @@ import { Types } from 'mongoose';
 import { ApplicantRepository } from '@Models/Users';
 import { CoverLetterDTO, CvDTO, DescriptionDTO, SkillDTO } from './dto';
 import { CloudServices } from '@Shared/Utils/Cloud';
-import { Degrees, FolderTypes, IndustriesFeilds} from '@Shared/Enums';
+import { Degrees, FolderTypes, IndustriesFeilds, JobStatus} from '@Shared/Enums';
 import { JobQueryParameters } from '@Shared/Interfaces';
 
 
@@ -14,9 +18,12 @@ export class ApplicantService
 {
 
 constructor(
-private readonly applicantRepository:ApplicantRepository,
+ private readonly applicantRepository:ApplicantRepository,
  private readonly cloudServices:CloudServices,
- private readonly jobRepository:JobRepository
+ private readonly jobRepository:JobRepository,
+ private readonly companyRepository:CompanyRepository,
+ private readonly applicantFactory:ApplicantFactory,
+ private readonly applicationRepository:ApplicationRepository
 ){}
 
 
@@ -305,8 +312,96 @@ async GetJobs(applicantIndustry: IndustriesFeilds,applicantdegrees:Degrees[],app
 
  const jobs = await this.jobRepository.ApplicantJobsDefault(applicantIndustry,applicantdegrees,applicantSkills,queryParameters)
  return jobs
+}
+
+
+async GetJobDetails(jobID:Types.ObjectId)
+{
+const jobExist = await this.jobRepository.FindOne({_id:jobID,status:JobStatus.Open},{mangerAlert:0,hrAlert:0,hrAlertNote:0,createdBy:0,updatedBy:0,status:0},{populate:{path:"companyId",select:"logo.URL companyname _id"}})
+if(!jobExist)
+{
+  throw new NotFoundException("No job found")
+}
+return jobExist
+}
+
+
+async GetcompanyJobs(companyId:Types.ObjectId,page:number,limit:number)
+{
+const companyExist = await this.companyRepository.Exist({_id:companyId})
+if(!companyExist)
+{
+  throw new NotFoundException("No Company Exist")
+}
+const skip = Math.ceil((page-1)*limit)
+
+const companyJobs = await this.jobRepository.Find({companyId:companyId,status:JobStatus.Open,isActive:true},{mangerAlert:0,hrAlert:0,hrAlertNote:0,__v:0,createdBy:0,updatedBy:0,status:0},{skip:skip,limit:limit,populate:{path:"companyId",select:"logo.URL companyname"}})
+if(!companyJobs)
+{
+  return []
+}
+else 
+{
+  return companyJobs
+}
 
 }
+
+
+async SearchCompany(companyName:string)
+{
+if(!companyName)
+{
+  throw new BadRequestException("company name is required")
+}
+
+
+const company = await this.companyRepository.FindOne({$and:[{approvedByAdmin:true},{isbanned:false},{companyname:{$regex:companyName,$options:"i"}}]},{createdby:0,__v:0,updatedAt:0,"address.id":0,"address._id":0,Companyemail:0,legalDocuments:0,approvedByAdmin:0,bannedAt:0,isbanned:0,deletedAt:0,companycodes:0, "logo.ID":0,"coverPic.ID":0,"coverPic._id":0,"logo._id":0})
+
+if(!company)
+{
+  return {message:"No company have this name"}
+}
+else 
+{
+  const leanCompanyObject = company.toObject()
+
+  delete (leanCompanyObject as any).id
+  delete leanCompanyObject.Hrs
+  delete (leanCompanyObject.address as any).id
+
+  return leanCompanyObject
+}
+}
+
+
+async JobApplication(jobId:Types.ObjectId,CVfile:Express.Multer.File,applicantData:applicantData)
+{
+
+const jobExist = await this.jobRepository.FindOne({_id:jobId},{companyId:1})
+if(!jobExist)
+{
+  throw new NotFoundException("No job fond")
+}
+
+const folder = `${FolderTypes.App}/${FolderTypes.Companies}/${jobExist._id.toString()}/${FolderTypes.JobPostings}/${jobId.toJSON()}/${FolderTypes.Applications}/${applicantData.applicantId.toString()}`
+
+const CV = await this.cloudServices.uploadOne(CVfile.path,folder)
+if(!CV)
+{
+  throw new InternalServerErrorException("Error uploading")
+}
+
+const constructedApplication = this.applicantFactory.createJobApplication(jobId,jobExist.companyId,applicantData,CV)
+
+const applyingResult = await this.applicationRepository.CreatDocument(constructedApplication)
+if(!applyingResult)
+{
+  throw new InternalServerErrorException("Error Appling")
+}
+return true
+}
+
 
 
 }

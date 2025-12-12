@@ -1,6 +1,9 @@
 import { Injectable } from "@nestjs/common";
-import { EducationEntity } from "../entity";
-import { EducationDTO, UpdateEducationDTO } from "../dto";
+import { EducationEntity, JobApplicationEntity } from "../entity";
+import { EducationDTO,UpdateEducationDTO } from "../dto";
+import { applicantData } from "@Shared/Interfaces";
+import { FileSchema } from '@Models/common';
+import { Types } from "mongoose";
 
 @Injectable()
 export class ApplicantFactory 
@@ -39,4 +42,21 @@ if(updateEducationDTO.endDate)
 
 return education
 }
+
+createJobApplication(jobId:Types.ObjectId,companyId:Types.ObjectId,applicantData:applicantData,CvSchema:FileSchema)
+{
+const application =  new JobApplicationEntity()
+
+application.applicantEmail = applicantData.applicantEmail
+application.applicantName = applicantData.applicantName
+application.applicantPhone = applicantData.applicantPhone
+application.applicantGender = applicantData.applicantgender
+application.applicantId = applicantData.applicantId
+application.companyId = companyId
+application.jobId =jobId
+application.cv = CvSchema
+
+return application
+}
+
 }
