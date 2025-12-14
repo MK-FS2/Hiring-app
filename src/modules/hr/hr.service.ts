@@ -1,15 +1,18 @@
-import { JobRepository } from './../../models/Job/jobRepository';
 import { BadRequestException, ConflictException, Injectable, InternalServerErrorException, NotFoundException } from '@nestjs/common';
 import { AddJobEntity, UpdateJobEntity } from './entity';
 import { Types } from 'mongoose';
-import { JobStatus } from '@Shared/Enums';
-
+import { ApplicationStatus, JobStatus } from '@Shared/Enums';
+import { JobRepository } from '@Models/Job';
+import { ApplicationRepository } from '@Models/Application';
 
 
 @Injectable()
 export class HrService 
 {
-constructor(private readonly jobRepository:JobRepository){}
+constructor(
+private readonly jobRepository:JobRepository,
+private readonly applicationRepository:ApplicationRepository
+){}
 
 async CreateJob(job:AddJobEntity)
 {
@@ -73,6 +76,25 @@ if(!updateResult)
     throw new InternalServerErrorException("Error Updating")
 }
 return true
+}
+
+async GetPendingJobApplications(jobId:Types.ObjectId,companyId:Types.ObjectId)
+{
+const jobExist = await this.jobRepository.FindOne({_id:jobId,companyId:companyId})
+if(!jobExist)
+{
+    throw new NotFoundException("Job No longer Exist")
+}
+
+const applications = await this.applicationRepository.Find({jobId,companyId,status:ApplicationStatus.Pending},{"cv.ID":0,"cv._id":0})
+if(!applications)
+{
+return []
+}
+else 
+{
+    return applications
+}
 }
 
 }

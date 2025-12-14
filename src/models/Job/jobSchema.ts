@@ -109,6 +109,9 @@ export class Job
   }
   })
   hrAlertNote?:string
+
+  @Prop({type:Number,required:false,default:0})
+  ApplicationsCount?:number
 }
 
 

@@ -2,9 +2,12 @@ import { FileSchema } from "@Models/common";
 import { Prop, Schema, SchemaFactory } from "@nestjs/mongoose";
 import { ApplicationStatus, Genders } from "@Shared/Enums";
 import { SchemaTypes, Types } from "mongoose";
+import dotenv from "dotenv"
+import { InternalServerErrorException } from "@nestjs/common";
+import CryptoJS from "crypto-js";
+dotenv.config()
 
-
-@Schema({timestamps:{createdAt:true}})
+@Schema({timestamps:{createdAt:true,updatedAt:false},toJSON:{virtuals:true},toObject:{virtuals:true}})
 export class Application  
 {
 @Prop({type:SchemaTypes.ObjectId,required:true,ref:"Company"})
@@ -48,3 +51,27 @@ applicantGender:Genders
 }
 
 export const  ApplicationSchema = SchemaFactory.createForClass(Application)
+
+const key = process.env.Encryptionkey!;
+if (!key) throw new InternalServerErrorException("EncryptionKey is missing in env");
+
+
+ApplicationSchema.post("find", function(docs: Application[]) 
+{
+    for (const doc of docs) 
+    {
+        if (doc.applicantPhone) 
+        {
+            doc.applicantPhone = CryptoJS.AES.decrypt(doc.applicantPhone, key).toString(CryptoJS.enc.Utf8);
+        }
+    }
+});
+
+
+ApplicationSchema.post("findOne", function(doc: Application) 
+{
+    if (doc?.applicantPhone) 
+    {
+        doc.applicantPhone = CryptoJS.AES.decrypt(doc.applicantPhone, key).toString(CryptoJS.enc.Utf8);
+    }
+});

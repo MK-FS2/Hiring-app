@@ -1,5 +1,5 @@
 import { HRFactory } from './factory/index';
-import {Body, Controller,InternalServerErrorException,Param,Post,Put,UseGuards} from '@nestjs/common';
+import {Body, Controller,Get,InternalServerErrorException,Param,Post,Put,UseGuards} from '@nestjs/common';
 import {HrService} from './hr.service';
 import {FullGuard, SetPermissions, UserData} from '@Shared/Decorators';
 import {ApprovedCompanyGuard,HRPermissionGuard, IsEmployeeGuard } from '@Shared/Guards';
@@ -40,5 +40,12 @@ const Result = await this.hrService.UpdateJob(job,jobId,companyId)
  return {message:"Updated Successfully",status:200}
 }
 
+@SetPermissions(HRPermissions.ViewApplicants)
+@Get("pendingjobApplication/:jobId")
+async GetAllpendingApplications(@Param("jobId")jobId:Types.ObjectId,@UserData("companyId")companyId:Types.ObjectId)
+{
+const Data = await this.hrService.GetPendingJobApplications(jobId,companyId)
+return Data
+}
 
 }

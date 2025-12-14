@@ -4,13 +4,11 @@ import { HrController } from './hr.controller';
 import { CommonUserModule } from '@Shared/Modules';
 import { CompanyModule } from '@modules/company';
 import { HRFactory } from './factory';
-import { MongooseModule } from '@nestjs/mongoose';
-import { Job, JobRepository, JobSchema } from '@Models/Job';
+import { AplicationModule, JobModule } from '@modules/common';
 
 @Module({
-  imports:[CommonUserModule,forwardRef(()=>CompanyModule),MongooseModule.forFeature([{name:Job.name,schema:JobSchema}])],
+  imports:[CommonUserModule,forwardRef(()=>CompanyModule),JobModule,AplicationModule],
   controllers:[HrController],
-  providers: [HrService,HRFactory,JobRepository],
-  exports:[JobRepository]
+  providers: [HrService,HRFactory],
 })
 export class HrModule {}

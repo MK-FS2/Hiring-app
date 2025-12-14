@@ -1,18 +1,16 @@
-import { Module } from '@nestjs/common';
+import { Module} from '@nestjs/common';
 import { ApplicantService } from './applicant.service';
 import { ApplicantController } from './applicant.controller';
 import { CommonUserModule } from '@Shared/Modules';
-import { HrModule } from '@modules/hr';
 import { ApplicantFactory } from './factory';
 import { CompanyModule } from '@modules/company';
-import { MongooseModule } from '@nestjs/mongoose';
-import { Application, ApplicationRepository, ApplicationSchema } from '@Models/Application';
+import { AplicationModule, JobModule } from '@modules/common';
 
 
 
 @Module({
-  imports:[HrModule,CommonUserModule,HrModule,CompanyModule,MongooseModule.forFeature([{name:Application.name,schema:ApplicationSchema}])],
+  imports:[CommonUserModule,CompanyModule,JobModule,AplicationModule],
   controllers:[ApplicantController],
-  providers: [ApplicantService,ApplicantFactory,ApplicationRepository],
+  providers:[ApplicantService,ApplicantFactory],
 })
 export class ApplicantModule {}

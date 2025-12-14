@@ -25,8 +25,7 @@ export enum HRPermissions
   DeleteJobs="DeleteJobs",
 
   ViewApplicants="ViewApplicants",
-  AcceptApplicants="AcceptApplicants",
-  RejectApplicants="RejectApplicants",
+  ManageApplicants = "ManageApplicants",
 
   ViewReports="ViewReports",
   ManageInterviews="ManageInterviews" 

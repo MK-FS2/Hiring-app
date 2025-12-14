@@ -1,4 +1,4 @@
-import { Body, ConflictException, Controller, Delete, InternalServerErrorException, Param, Post, Put, UseGuards } from '@nestjs/common';
+import { Body, ConflictException, Controller, Delete, Get, InternalServerErrorException, Param, Post, Put, UseGuards } from '@nestjs/common';
 import { MangerService } from './manger.service';
 import { FullGuard, UserData } from '@Shared/Decorators';
 import { Roles } from '@Shared/Enums';
@@ -29,6 +29,13 @@ if(!companyId)
 const Result = await this.mangerService.GenerateSignUpCode(codeDTO,userID,companyId)
 if(!Result) throw new InternalServerErrorException("Internal Server Error")
 return {message:"code sent succsessfully"}
+}
+
+@Get("AllPermtions")
+DisplayAllPermtions()
+{
+const Data = this.mangerService.DisplayAllPermtions()
+return Data
 }
 
 @Put("grantPermissions")

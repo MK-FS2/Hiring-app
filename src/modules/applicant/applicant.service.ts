@@ -397,6 +397,7 @@ if(!applyingResult)
 {
   throw new InternalServerErrorException("Error Appling")
 }
+await this.jobRepository.UpdateOne({_id:jobId},{$inc:{ApplicationsCount:1}})
 return true
 }
 

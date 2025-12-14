@@ -51,6 +51,22 @@ if(!sendingResult)
 return true
 }
 
+
+DisplayAllPermtions()
+{
+  const Permissions= 
+  [
+  "PostJobs",
+  "EditJobs",
+  "DeleteJobs",
+  "ViewApplicants",
+  "ManageApplicants",
+  "ViewReports",
+  "ManageInterviews"
+];
+   return Permissions
+}
+
 async GrantPermtions(permissionsDTO:PermissionsDTO,companyId:Types.ObjectId)
 {
 const hrExist = await this.companyRepository.FindOne({_id:companyId,Hrs: new Types.ObjectId(permissionsDTO.hrId)},{"Hrs.$":1},{populate:{path:"Hrs",select:"permissions"}});
