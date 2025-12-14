@@ -23,7 +23,6 @@ export class CloudServices
   }
 
 
-
   // Convert Cloudinary response → your fileformat
 private mapCloudinaryToFileFormat(result: UploadApiResponse):FileSchema 
  {
@@ -54,7 +53,7 @@ async uploadOne(filePath: string, folder: string): Promise<FileSchema|null>
   {
     try 
     {
-    const result = await cloudinary.uploader.upload(filePath, { folder });
+    const result = await cloudinary.uploader.upload(filePath,{ folder,access_mode:"public"});
     return this.mapCloudinaryToFileFormat(result);
     }
     catch(err)
@@ -121,3 +120,6 @@ async ReplaceFile(newfilebath:string,oldfileid:string,folder:string)
 }
 
 }
+
+
+

@@ -3,7 +3,7 @@ import { applicantData } from '@Shared/Interfaces';
 import { ApplicantFactory } from './factory/index';
 import { CompanyRepository } from './../../models/Company/Company.Repository';
 import { JobRepository } from './../../models/Job/jobRepository';
-import { BadGatewayException, BadRequestException, ConflictException, Injectable, InternalServerErrorException, NotFoundException} from '@nestjs/common';
+import { BadGatewayException, BadRequestException, ConflictException, Injectable, InternalServerErrorException, NotAcceptableException, NotFoundException} from '@nestjs/common';
 import { EducationEntity } from './entity';
 import { Types } from 'mongoose';
 import { ApplicantRepository } from '@Models/Users';
@@ -255,7 +255,6 @@ async RemoveCv(CvId:Types.ObjectId,applicantId:Types.ObjectId)
   return true
 }
 
-
 // it add,replace or delet 
 async SettingCoverLetter(coverLetterDTO:CoverLetterDTO,applicantId:Types.ObjectId)
 {
@@ -374,7 +373,6 @@ else
 }
 }
 
-
 async JobApplication(jobId:Types.ObjectId,CVfile:Express.Multer.File,applicantData:applicantData)
 {
 
@@ -402,6 +400,39 @@ if(!applyingResult)
 return true
 }
 
+async GetProfilePublic(applicantId:Types.ObjectId)
+{
 
+  const applicant = await this.applicantRepository.FindOne({_id:applicantId},{password:0,"coverPic.ID":0,"coverPic._id":0,__v:0,"CVS._id":0,"CVS.cvFile._id":0,"CVS.cvFile.ID":0,phoneNumber:0,"profilePic._id":0,"profilePic.ID":0,Role:0,"education._id":0,isBanned:0,isVerified:0,OTP:0,provider:0,deletedAt:0,changedCredentialsAt:0,updatedAt:0})
+   if(!applicant)
+   {
+   throw new NotFoundException("Not found")
+   }
+   else
+   {
+    return applicant 
+   }
+}
+
+async GetProfilePrivate(applicantId:Types.ObjectId)
+{
+const applicant = await this.applicantRepository.FindOne({_id:applicantId},{OTP:0,"CVS.cvFile.ID":0,"coverPic.ID":0,"profilePic.ID":0,updatedAt:0,changedCredentialsAt:0,provider:0,Role:0,__v:0,isVerified:0,bannedAt:0})
+if(!applicant)
+{
+  throw new NotAcceptableException("No user found")
+}
+return applicant 
+}
 
 }
+
+
+
+
+
+
+
+
+
+
+

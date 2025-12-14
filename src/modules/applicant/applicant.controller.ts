@@ -1,7 +1,7 @@
 import { ApplicantFactory } from './factory/index';
 import { Body, Controller, Delete, Get, InternalServerErrorException, Param, Post, Put, Query, UseGuards, UseInterceptors } from '@nestjs/common';
 import { ApplicantService } from './applicant.service';
-import { FileData, FullGuard, UserData } from '@Shared/Decorators';
+import { FileData, FullGuard, RolesAllowed, UserData } from '@Shared/Decorators';
 import { CarerExperienceLevels, Degrees, Filecount, Genders, IndustriesFeilds, Roles, WorkplaceTypes } from '@Shared/Enums';
 import { SkillDTO, EducationDTO, UpdateEducationDTO, CvDTO, CoverLetterDTO, DescriptionDTO} from './dto';
 import { Types } from 'mongoose';
@@ -220,6 +220,20 @@ if(!Result) throw new InternalServerErrorException("Internal Server Error")
 return {message:"certification Added Successfully",status:200}
 }
 
+@RolesAllowed(Roles.Admin,Roles.Manger,Roles.HR)
+@Get("publicApplicantProfile/:applicantId")
+async GetProfilePublic(@Param("applicantId")applicantId:Types.ObjectId)
+{
+  const Data = await this.applicantService.GetProfilePublic(applicantId)
+ return Data
+}
+
+@Get("Privateprofile")
+async GetApplicantProfilePeivate(@UserData("_id")applicantId:Types.ObjectId)
+{
+  const Data = await this.applicantService.GetProfilePrivate(applicantId)
+  return Data
+}
 
 }
 
