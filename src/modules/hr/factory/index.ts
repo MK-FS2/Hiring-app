@@ -1,3 +1,4 @@
+import { CreateInterviewEntity } from './../entity/createInterview.entity';
 import { UpdateJobDTO } from './../dto/updateJob.dto';
 import { Injectable } from "@nestjs/common";
 import { AddJobDTO } from "../dto";
@@ -67,6 +68,15 @@ export class HRFactory
   job.updatedBy = editorId;
 
   return job;
+}
+
+CreateInterview(jobId:Types.ObjectId,companyId:Types.ObjectId,applicationId:Types.ObjectId)
+{
+  const interview = new CreateInterviewEntity()
+  interview.companyId = companyId
+  interview.jobId =  jobId
+  interview.applicationId = applicationId
+  return interview
 }
 
 }

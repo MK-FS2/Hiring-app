@@ -47,7 +47,6 @@ applicantGender:Genders
         }
      })
     matchingScore?:number;
-
 }
 
 export const  ApplicationSchema = SchemaFactory.createForClass(Application)

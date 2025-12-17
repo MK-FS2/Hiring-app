@@ -1,10 +1,11 @@
+/* eslint-disable @typescript-eslint/no-unsafe-return */
 import { HRFactory } from './factory/index';
-import {Body, Controller,Get,InternalServerErrorException,Param,Post,Put,UseGuards} from '@nestjs/common';
+import {Body, Controller,Get,InternalServerErrorException,Param,Post,Put,Query,UseGuards} from '@nestjs/common';
 import {HrService} from './hr.service';
 import {FullGuard, SetPermissions, UserData} from '@Shared/Decorators';
 import {ApprovedCompanyGuard,HRPermissionGuard, IsEmployeeGuard } from '@Shared/Guards';
 import {HRPermissions, Roles} from '@Shared/Enums';
-import { AddJobDTO, UpdateJobDTO } from './dto';
+import { AddJobDTO, InterviewDTO, ProcessAplicationDTO, UpdateJobDTO } from './dto';
 import { Types } from 'mongoose';
 import { ValidMongoID } from '@Shared/Pipes';
 
@@ -46,6 +47,39 @@ async GetAllpendingApplications(@Param("jobId")jobId:Types.ObjectId,@UserData("c
 {
 const Data = await this.hrService.GetPendingJobApplications(jobId,companyId)
 return Data
+}
+
+@Put("processApplication")
+@SetPermissions(HRPermissions.ManageApplicants)
+async ProcessAplication(@Body()ProcessAplicationDTO:ProcessAplicationDTO,@UserData("companyId")companyId:Types.ObjectId,)
+{
+  const Result = await this.hrService.ProcessApplicants(ProcessAplicationDTO,companyId)
+  if(!Result) throw new InternalServerErrorException("Internal Server Error")
+  return {message:"Processed Successfully",status:200}
+}
+
+@SetPermissions(HRPermissions.ManageInterviews)
+@Get("interviewEvents")
+async GetAllInterview(@UserData("companyId")companyId:Types.ObjectId,@Query("page")page:number=1,@Query("limit")limit:number=10)
+{
+const Data = await this.hrService.GetAllInterviews(companyId,page,limit)
+return Data 
+}
+
+@SetPermissions(HRPermissions.ManageInterviews)
+@Get("jobInterviews/:jobId")
+async GetJobInterviews(@UserData("companyId")companyId:Types.ObjectId,@Param("jobId",ValidMongoID)jobId:Types.ObjectId)
+{
+const Data = await this.hrService.GetJobInterviews(jobId,companyId)
+return Data
+}
+
+@Post("SchdulaInterview/:interviewId")
+async SchdulaInterview(@Body()interviewDTO:InterviewDTO,@UserData("companyId")companyId:Types.ObjectId,@Param("interviewId",ValidMongoID)interviewId:Types.ObjectId)
+{
+  const Result = await this.hrService.ScheduleInterview(interviewId,companyId,interviewDTO)
+  if(!Result) throw new InternalServerErrorException("Internal Server Error")
+  return {message:"Schdulaled Successfully",status:200}
 }
 
 }

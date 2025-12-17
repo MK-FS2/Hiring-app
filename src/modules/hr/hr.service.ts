@@ -1,9 +1,14 @@
+/* eslint-disable @typescript-eslint/no-unsafe-argument */
 import { BadRequestException, ConflictException, Injectable, InternalServerErrorException, NotFoundException } from '@nestjs/common';
 import { AddJobEntity, UpdateJobEntity } from './entity';
 import { Types } from 'mongoose';
 import { ApplicationStatus, JobStatus } from '@Shared/Enums';
 import { JobRepository } from '@Models/Job';
 import { ApplicationRepository } from '@Models/Application';
+import { InterviewDTO, ProcessAplicationDTO } from './dto';
+import { HRFactory } from './factory';
+import { InterviewRepository } from '@Models/Interview';
+import { MailService } from '@Shared/Utils';
 
 
 @Injectable()
@@ -11,7 +16,10 @@ export class HrService
 {
 constructor(
 private readonly jobRepository:JobRepository,
-private readonly applicationRepository:ApplicationRepository
+private readonly applicationRepository:ApplicationRepository,
+private readonly interviewRepository:InterviewRepository,
+private readonly hrFactory:HRFactory,
+private readonly mailService:MailService
 ){}
 
 async CreateJob(job:AddJobEntity)
@@ -95,6 +103,116 @@ else
 {
     return applications
 }
+}
+
+async ProcessApplicants(processAplicationDTO:ProcessAplicationDTO,companyId:Types.ObjectId)
+{
+const {jobId,applicationId,decision} = processAplicationDTO
+const applicationExist = await this.applicationRepository.FindOne({_id:applicationId,jobId,companyId,status:ApplicationStatus.Pending},{applicantEmail:1})
+if(!applicationExist)
+{
+  throw new NotFoundException("No Application Found")
+}
+// the idea was it will be under reviw if ther was an ATS but for now i will skipp this part to be manual 
+const newStatus = decision ? ApplicationStatus.Under_Interview : ApplicationStatus.Rejected
+
+const result = await this.applicationRepository.UpdateOne({_id:applicationId,jobId,companyId},{status:newStatus})
+if(!result)
+{
+ throw new InternalServerErrorException("Error Updateing")
+}
+
+if(decision)
+{
+const constructedInterview = this.hrFactory.CreateInterview(jobId,companyId,applicationId)
+const creatingResult = await this.interviewRepository.CreatDocument(constructedInterview)
+if(!creatingResult)
+{
+    // role back
+    await this.applicationRepository.UpdateOne({_id:applicationId,jobId,companyId},{status:ApplicationStatus.Pending})
+    throw new InternalServerErrorException("Error creating Interview")
+}
+}
+else 
+{
+await this.mailService.sendCustomMail(
+  applicationExist.applicantEmail,
+  'Application Update',
+  `
+    <div style="font-family: Arial, sans-serif; padding: 16px; color: #333;">
+      <h2>Application Status</h2>
+      <p>
+        Thank you for your interest in the position.
+      </p>
+      <p>
+        After careful review, we will not be moving forward with your application at this time.
+      </p>
+      <p>
+        We wish you success in your job search.
+      </p>
+      <p style="font-size: 14px; color: #777;">
+        This decision is final. Please do not reply to this email.
+      </p>
+    </div>
+  `
+);
+}
+return true
+}
+
+async GetAllInterviews(companyId:Types.ObjectId,page:number,limit:number)
+{
+const skip = Math.ceil((page-1)*limit)
+const data = this.interviewRepository.GetjobInterviewList(companyId,skip,limit)
+return data
+}
+
+async GetJobInterviews(jobId:Types.ObjectId,companyId:Types.ObjectId)
+{
+const list = await this.interviewRepository.Find({companyId,jobId},{__v:0,jobId:0,companyId:0},{populate:{path:"applicationId",select:"applicantName applicantEmail applicantPhone applicantGender"}})
+if(!list)
+{
+ throw new BadRequestException("Invalid Id")
+}
+else 
+{
+  return list
+}
+}
+
+async ScheduleInterview(interviewId:Types.ObjectId,companyId:Types.ObjectId,interviewDTO:InterviewDTO) 
+{
+ const {interviewDate,interviewTime} = interviewDTO
+
+
+ const Interview = await this.interviewRepository.GetInterviewDetails(interviewId,companyId)
+  
+ if(Interview.status == ApplicationStatus.Under_Interview)
+ {
+ throw new ConflictException("Interview is already scheduled");
+ }
+
+
+  const updateResult = await this.interviewRepository.UpdateOne({_id:interviewId,companyId},{$set:{status:ApplicationStatus.Under_Interview,interviewDate:interviewDate,interviewTime:interviewTime}})
+  if(!updateResult)
+  {
+    throw new InternalServerErrorException("Error Upadting")
+  }
+   
+ const mailHtml = `
+ <p>Dear <strong>${Interview.applicantName}</strong>,</p>
+ <p>Your interview has been scheduled on <strong>${interviewDTO.interviewDate.toISOString().split('T')[0]} at ${interviewDTO.interviewTime}</strong>.</p>
+ <p>Please be prepared and join on time.</p>
+ `;
+
+
+  const sendingResult = await this.mailService.sendCustomMail(Interview.applicantEmail,"Interview Scheduled",mailHtml)
+  if(!sendingResult)
+  {
+    await this.interviewRepository.UpdateOne({_id:interviewId,companyId},{$set:{status:ApplicationStatus.Pending},$unset:{interviewDate:"",interviewTime:""}})
+    throw new InternalServerErrorException("Sending failed")
+  }
+  return true
 }
 
 }

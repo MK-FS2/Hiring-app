@@ -1,3 +1,4 @@
+import { TokenRepository } from './../../models/Token/Token.Repository';
 import { CompanyRepository } from './../../models/Company/Company.Repository';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
@@ -14,6 +15,7 @@ import * as bcrypt from 'bcrypt';
 import { ConfirmEmailDTO, ResetPasswordDTO } from './dto';
 import { OAuth2Client } from "google-auth-library";
 import { LoginDTO } from './dto/login.dto';
+import { Types } from 'mongoose';
 
 
 
@@ -27,7 +29,8 @@ private readonly hrRepository:HRRepository,
 private readonly applicantRepository:ApplicantRepository,
 private readonly configService:ConfigService,
 private readonly jwtService:JwtService,
-private readonly companyRepository:CompanyRepository
+private readonly companyRepository:CompanyRepository,
+private readonly tokenRepository:TokenRepository
 ){}
 
 // To be refactored into common private methods 
@@ -423,6 +426,46 @@ throw new BadRequestException("Invalid email or password")
   
   return {accessToken,refreshToken}
 
+}
+
+
+async Logout(accessToken:string,refreshToken:string,userId:Types.ObjectId)
+{
+const blacklistingResult = await this.tokenRepository.blackListTokens(accessToken,refreshToken,userId)
+if(!blacklistingResult)
+{
+  throw new InternalServerErrorException()
+}
+return true
+}
+
+
+async RefreshTokens(oldaccessToken:string,oldrefreshToken:string,userId:Types.ObjectId)
+{
+  const userExist = await this.baseUserRepository.FindOne({_id:userId},{firstName:1,lastName:1,email:1,Role:1})
+  if(!userExist)
+  {
+   throw new BadRequestException("Invalid email or password")
+  } 
+   const payload = 
+  {
+    id: userExist._id,
+    fullName: `${userExist.firstName}-${userExist.lastName}`,
+    email: userExist.email,
+    role: userExist.Role,
+  };
+
+  const Akey = this.configService.get<string>("tokens.access")
+  const Rkey = this.configService.get<string>("tokens.refresh")
+  const accessToken = this.jwtService.sign(payload, {secret:Akey,expiresIn:'7d'});
+  const refreshToken = this.jwtService.sign(payload,{secret:Rkey,expiresIn:'30d'});
+
+  const result = await this.tokenRepository.blackListTokens(oldaccessToken,oldrefreshToken,userId)
+   if(!result)
+   {
+    throw new InternalServerErrorException()
+   }
+  return {accessToken,refreshToken}
 }
 
 }

@@ -1,14 +1,16 @@
 import { LoginDTO } from './dto/login.dto';
 import { nanoid } from 'nanoid';
-import { BadRequestException, Body, Controller, InternalServerErrorException, Param, ParseIntPipe, Post, Put, UseInterceptors } from '@nestjs/common';
+import { BadRequestException, Body, Controller, Headers, InternalServerErrorException, Param, ParseIntPipe, Post, Put, UseGuards, UseInterceptors } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import {  ApplicantDTO, ConfirmEmailDTO, HRDTO, MangerDTO, ResetPasswordDTO } from './dto';
 import { AuthFactory } from './factory';
 import { FilesInterceptor } from '@Shared/Interceptors';
 import { FileTypes } from '@Shared/Helpers';
 import { Filecount, OTPTypes} from '@Shared/Enums';
-import { FileData } from '@Shared/Decorators';
+import { FileData, UserData } from '@Shared/Decorators';
 import { IsValidEmailPipe } from '@Shared/Pipes';
+import { AuthGuard } from '@Shared/Guards';
+import { Types } from 'mongoose';
 
 
 
@@ -129,5 +131,30 @@ const Token = await this.authService.LoginSystem(loginDTO)
 return Token
 }
 
+@UseGuards(AuthGuard)
+@Post("logout")
+async LogOut(@UserData("_id")userId:Types.ObjectId,@Headers('authorization')authHeader:string,@Headers("refreshtoken")refreshToken:string)
+{
+const accessToken = authHeader?.split(' ')[1];
+if(!refreshToken || ! accessToken)
+{
+  throw new BadRequestException("Token Is missing")
+}
+const Result = await this.authService.Logout(accessToken,refreshToken,userId)
+if (!Result) throw new InternalServerErrorException("Internal Server Error");
+return {success:true};
+}
 
+@Post("refreshTokens")
+@UseGuards(AuthGuard)
+async RefreshTokens(@UserData("_id")userId:Types.ObjectId,@Headers('authorization')authHeader:string,@Headers("refreshtoken")refreshToken:string)
+{
+const accessToken = authHeader?.split(' ')[1];
+if(!refreshToken || ! accessToken)
+{
+  throw new BadRequestException("Token Is missing")
+}
+const Tokens = await this.authService.RefreshTokens(accessToken,refreshToken,userId)
+return Tokens
+}
 }

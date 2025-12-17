@@ -11,7 +11,10 @@ export class TokenRepository extends AbstractRepository<Token>
         super(TokenModel);
     }
 
-    async blackListTokens(accessToken: string, refreshToken: string, userId: Types.ObjectId) {
+    async blackListTokens(accessToken: string, refreshToken: string, userId: Types.ObjectId) 
+    {
+        try 
+        {
         const document: Token = 
         {
             accessToken,
@@ -19,6 +22,13 @@ export class TokenRepository extends AbstractRepository<Token>
             userId
         };
          await this.TokenModel.create(document);
+        return true
+        }
+        catch(err)
+        {
+            console.log(err)
+        return false
+        }
     }
 
     async checkAccessToken(accessToken: string, userId: Types.ObjectId): Promise<boolean> {

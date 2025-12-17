@@ -10,6 +10,7 @@ import { BaseUserRepository } from '@Models/Users';
 
 
 
+
 @Injectable()
 export class AuthGuard implements CanActivate
 {
@@ -76,7 +77,7 @@ export class AuthGuard implements CanActivate
 
       if (req.headers['refreshtoken']) 
       {
-        const refreashtoken = req.headers['refreashtoken'] as string;
+        const refreashtoken = req.headers['refreshtoken'] as string;
         const isRefBlacklisted = await this.tokenRepository.checkRefreshToken(refreashtoken, userid);
         if (isRefBlacklisted) 
         {
@@ -94,11 +95,11 @@ export class AuthGuard implements CanActivate
         {
           throw new UnauthorizedException("Deprecated refresh token login again");
         }
-
-        if(!userid.equals(refreshPyload.id))
+        console.log(refreshPyload.id)
+        if(!userid.equals(new Types.ObjectId(refreshPyload.id)))
         {
           await this.baseUserRepository.UpdateOne({ _id: userid }, { $set: { isBanned: true, bannedAt: new Date(Date.now()) } });   
-          throw new UnauthorizedException("Breach of protocol: you are permanently banned");
+          throw new UnauthorizedException("Breach of protocol you are permanently banned");
         }
       }
 

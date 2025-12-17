@@ -40,4 +40,20 @@ export class MailService
     const sendResult = await this.transport.sendMail(mailOptions);
     return sendResult.rejected.length === 0;
   }
+
+
+  async sendCustomMail(toEmail:string,subject:string,html:string,):Promise<boolean> 
+  {
+  const emailConfig = this.configService.get<{user:string}>('email');
+
+  const mailOptions = 
+  {
+    from: `"Social App" <${emailConfig!.user}>`,
+    to: toEmail,
+    subject,
+    html,
+  };
+  const sendResult = await this.transport.sendMail(mailOptions);
+  return sendResult.rejected.length === 0;
+}
 }

@@ -137,8 +137,9 @@ export enum JobStatus
 export enum ApplicationStatus 
 {
     Pending = "Pending",
-    Under_Reviewed = "Under_Reviewed",
     Under_Interview = "Under_Interview",
     Accepted = "Accepted",
     Rejected = "Rejected"
 }
+
+

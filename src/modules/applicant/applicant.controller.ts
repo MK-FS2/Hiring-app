@@ -217,7 +217,7 @@ async ApplyforJob(
 
 const Result = await this.applicantService.JobApplication(jobId,CVFile,applicantData)
 if(!Result) throw new InternalServerErrorException("Internal Server Error")
-return {message:"certification Added Successfully",status:200}
+return {message:"Applyed Successfully",status:200}
 }
 
 @RolesAllowed(Roles.Admin,Roles.Manger,Roles.HR)
