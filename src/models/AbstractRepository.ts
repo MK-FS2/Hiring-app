@@ -104,4 +104,12 @@ async DeleteMany(Filter: RootFilterQuery<T>): Promise<boolean>
     return true;
    }
 }
+
+
+async CountDocuments(Filter:RootFilterQuery<T>)
+{
+const result = await this.model.countDocuments(Filter)
+return result
+}
+
 }
