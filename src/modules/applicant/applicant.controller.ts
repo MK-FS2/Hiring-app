@@ -235,6 +235,30 @@ async GetApplicantProfilePeivate(@UserData("_id")applicantId:Types.ObjectId)
   return Data
 }
 
+@Get("applications")
+async GetApplications(@UserData("_id")applicantId:Types.ObjectId)
+{
+const Data = await this.applicantService.GetApplications(applicantId)
+return Data
+}
+
+@Post("savePost/:jobId")
+async SavingPost(@Param("jobId",ValidMongoID)jobId:Types.ObjectId,@UserData("_id")userId:Types.ObjectId)
+{
+const Result = await this.applicantService.SaveJobPost(jobId,userId)
+if(!Result) throw new InternalServerErrorException("Internal Server Error")
+return {message:"Saved Successfully",status:200}
+}
+
+@Put("Unsave/:jobId")
+async UnsavePost(@Param("jobId",ValidMongoID)jobId:Types.ObjectId,@UserData("_id")userId:Types.ObjectId)
+{
+const Result = await this.applicantService.UnsaveJobPost(jobId,userId)
+if(!Result) throw new InternalServerErrorException("Internal Server Error")
+return {message:"Unsaved Successfully",status:200}
+}
+
+
 }
 
 

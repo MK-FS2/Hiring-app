@@ -103,6 +103,7 @@ coverLetter?:string
 
 @Prop({type:Boolean,required:false,default:true})
 availability?:boolean
+
 }
 
 

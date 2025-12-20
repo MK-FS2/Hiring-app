@@ -77,18 +77,10 @@ async UpdateMany(Filter: RootFilterQuery<T>,UpdateOptions: UpdateQuery<T>): Prom
   }
 }
 
-async DeleteOne(Filter:RootFilterQuery<T>):Promise<boolean>
+async DeleteOne(filter: RootFilterQuery<T>):Promise<boolean> 
 {
- const Result = await this.model.deleteOne(Filter)
- 
-   if(Result.deletedCount == 0)
-   {
-   return false
-   }
-   else 
-   {
-    return true
-   }
+  const result = await this.model.deleteOne(filter);
+  return result.deletedCount > 0;
 }
 
 async DeleteMany(Filter: RootFilterQuery<T>): Promise<boolean> 

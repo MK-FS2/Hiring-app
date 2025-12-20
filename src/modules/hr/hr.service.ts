@@ -1,7 +1,8 @@
+import { SavedPostsRepository } from './../../models/SavedJobPosts/savedposts.Repository';
 /* eslint-disable @typescript-eslint/no-unsafe-argument */
-import { BadRequestException, ConflictException, Injectable, InternalServerErrorException, NotFoundException } from '@nestjs/common';
+import { BadRequestException, ConflictException, Injectable, InternalServerErrorException, NotFoundException, UnauthorizedException } from '@nestjs/common';
 import { AddJobEntity, UpdateJobEntity } from './entity';
-import { Types } from 'mongoose';
+import  { Types } from 'mongoose';
 import { ApplicationStatus, JobStatus } from '@Shared/Enums';
 import { JobRepository } from '@Models/Job';
 import { ApplicationRepository } from '@Models/Application';
@@ -9,6 +10,7 @@ import { InterviewDTO, ProcessAplicationDTO } from './dto';
 import { HRFactory } from './factory';
 import { InterviewRepository } from '@Models/Interview';
 import { MailService } from '@Shared/Utils';
+
 
 
 @Injectable()
@@ -19,7 +21,8 @@ private readonly jobRepository:JobRepository,
 private readonly applicationRepository:ApplicationRepository,
 private readonly interviewRepository:InterviewRepository,
 private readonly hrFactory:HRFactory,
-private readonly mailService:MailService
+private readonly mailService:MailService,
+private readonly savedPostsRepository:SavedPostsRepository
 ){}
 
 async CreateJob(job:AddJobEntity)
@@ -213,6 +216,78 @@ async ScheduleInterview(interviewId:Types.ObjectId,companyId:Types.ObjectId,inte
     throw new InternalServerErrorException("Sending failed")
   }
   return true
+}
+
+async ToggleJobStatus(jobId:Types.ObjectId,companyId:Types.ObjectId)
+{
+const job = await this.jobRepository.FindOne({_id:jobId,companyId},{status:1,deadline:1})
+if(!job)
+{
+  throw new NotFoundException("No job found")
+}
+
+if(job.status == JobStatus.UnderReview)
+{
+  throw new UnauthorizedException("Job Not yet Active")
+}
+
+if(job.deadline < new Date())
+{
+   throw new UnauthorizedException("Job is expired") 
+}
+
+
+let newStatus
+
+if(job.status == JobStatus.Closed)
+{
+  newStatus = JobStatus.Open
+}
+else 
+{
+    newStatus = JobStatus.Closed
+}
+
+const result = await this.jobRepository.UpdateOne({_id:jobId,companyId},{status:newStatus})
+if(!result)
+{
+  throw new InternalServerErrorException("Error updating")
+}
+return true
+}
+
+async DeleteJob(jobId:Types.ObjectId,companyId:Types.ObjectId)
+{
+const jobExist = await this.jobRepository.Exist({_id:jobId,companyId})
+if(!jobExist)
+{
+ throw new NotFoundException("No job found")
+}
+
+const applicationsExist = await this.applicationRepository.Find({jobId,companyId,status:ApplicationStatus.Pending})
+if(applicationsExist)
+{
+  throw new ConflictException('This job cannot be deleted because there are pending applications.')
+}
+
+const InterviewsExist = await this.interviewRepository.Find({jobId,companyId,$or:[{status:ApplicationStatus.Pending},{status:ApplicationStatus.Under_Interview}]})
+if(InterviewsExist)
+{
+  throw new ConflictException('This job cannot be deleted because there are pending or under going Interviews.')
+}
+
+try 
+{
+    await this.jobRepository.DeleteOne({_id:jobId,companyId});
+    await this.applicationRepository.DeleteMany({jobId,companyId});
+    await this.interviewRepository.DeleteMany({jobId,companyId});
+    await this.savedPostsRepository.DeleteMany({jobId})
+}
+ catch (error) 
+{
+ throw new InternalServerErrorException(`Deleteing failed ${error.message}`)
+} 
+return true
 }
 
 }

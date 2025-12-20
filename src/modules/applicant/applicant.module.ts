@@ -4,12 +4,12 @@ import { ApplicantController } from './applicant.controller';
 import { CommonUserModule } from '@Shared/Modules';
 import { ApplicantFactory } from './factory';
 import { CompanyModule } from '@modules/company';
-import { AplicationModule, JobModule } from '@modules/common';
+import { AplicationModule, JobModule, SavedPostsModule } from '@modules/common';
 
 
 
 @Module({
-  imports:[CommonUserModule,CompanyModule,JobModule,AplicationModule],
+  imports:[CommonUserModule,CompanyModule,JobModule,AplicationModule,SavedPostsModule],
   controllers:[ApplicantController],
   providers:[ApplicantService,ApplicantFactory],
 })

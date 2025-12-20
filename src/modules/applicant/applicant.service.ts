@@ -1,3 +1,4 @@
+import { SavedPostsRepository } from './../../models/SavedJobPosts/savedposts.Repository';
 import { ApplicationRepository } from './../../models/Application/application.Repository';
 import { applicantData } from '@Shared/Interfaces';
 import { ApplicantFactory } from './factory/index';
@@ -23,7 +24,8 @@ constructor(
  private readonly jobRepository:JobRepository,
  private readonly companyRepository:CompanyRepository,
  private readonly applicantFactory:ApplicantFactory,
- private readonly applicationRepository:ApplicationRepository
+ private readonly applicationRepository:ApplicationRepository,
+ private readonly savedPostsRepository:SavedPostsRepository
 ){}
 
 
@@ -423,6 +425,47 @@ if(!applicant)
   throw new NotAcceptableException("No user found")
 }
 return applicant 
+}
+
+async GetApplications(applicantId:Types.ObjectId)
+{
+const application = await this.applicationRepository.FindOne({applicantId:applicantId},{status:1,createdAt:1,"cv.URL":1,companyId:1,jobId:1},{populate:[{path:"companyId",select:"logo.URL companyname"},{path:"jobId",select:"title"}]})
+if(!application)
+{
+  return []
+}
+return application
+}
+
+async SaveJobPost(jobId:Types.ObjectId,userId:Types.ObjectId)
+{
+const jobExist = await this.jobRepository.Exist({_id:jobId})
+if(!jobExist)
+{
+throw new NotFoundException("No job Found")
+}
+
+const result = await this.savedPostsRepository.CreatDocument({userId:userId,jobId:jobId})
+if(!result)
+{
+  throw new InternalServerErrorException("Saving failed")
+}
+return true
+}
+
+async UnsaveJobPost(jobId:Types.ObjectId,userId:Types.ObjectId)
+{
+  const saveExits = await this.savedPostsRepository.Exist({jobId,userId})
+  if(!saveExits)
+  {
+    throw new NotFoundException("No Post found")
+  }
+  const result = await this.savedPostsRepository.DeleteOne({jobId,userId})
+  if(!result)
+  {
+    throw new InternalServerErrorException("Error Deleting")
+  }
+  return true
 }
 
 }

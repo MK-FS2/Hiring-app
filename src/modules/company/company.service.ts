@@ -174,7 +174,7 @@ async GetAllActiveJobs(companyId:Types.ObjectId,page:number,limit:number)
 {
 const skip = (page-1)*limit
 console.log(skip)
-const jobs = await this.jobRepository.Find({companyId,status:JobStatus.Open},{},{skip:skip,limit:limit,populate:[{path:"createdBy",select:"firstName profilePic.URL hireDate lastName userName email phoneNumber gender  _id"},{path:'updatedBy',select:"firstName profilePic.URL hireDate lastName userName email phoneNumber gender  _id"}]})
+const jobs = await this.jobRepository.Find({companyId,status:JobStatus.Open,deadline:{$type:"date",$gte:new Date()}},{},{skip:skip,limit:limit,populate:[{path:"createdBy",select:"firstName profilePic.URL hireDate lastName userName email phoneNumber gender  _id"},{path:'updatedBy',select:"firstName profilePic.URL hireDate lastName userName email phoneNumber gender  _id"}]})
 if(!jobs)
 {
     return []
@@ -184,4 +184,26 @@ else
  return jobs
 }
 }
+
+async GetAllInactiveJobs(companyId:Types.ObjectId)
+{
+const jobs = await this.jobRepository.Find({companyId,status:JobStatus.Closed})
+if(!jobs)
+{
+    return []
+}
+else 
+{
+return  jobs   
+}
+}
+
+async GetAllExpiredJobs(companyId: Types.ObjectId) {
+  const now = new Date();
+
+  const jobs = await this.jobRepository.Find({companyId,deadline:{$type:'date',$lt:now}},{hrAlert:0,hrAlertNote:0,__v:0});
+
+  return jobs ?? [];
+}
+
 }

@@ -79,5 +79,20 @@ const Data = await this.companyService.GetAllActiveJobs(companyId,page,limit)
 return Data
 }
 
+@RolesAllowed(Roles.HR)
+@Get("allInactiveJobs")
+async GetAllInactiveJobs(@UserData("companyId")companyId:Types.ObjectId)
+{
+const Data = await this.companyService.GetAllInactiveJobs(companyId)
+return Data
+}
+
+@RolesAllowed(Roles.HR)
+@Get("allExpiredJobs")
+async GetAllExpiredJobs(@UserData("companyId")companyId:Types.ObjectId)
+{
+const Data = await this.companyService.GetAllExpiredJobs(companyId)
+return Data
+}
 
 }

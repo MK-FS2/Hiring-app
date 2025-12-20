@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-unsafe-return */
 import { HRFactory } from './factory/index';
-import {Body, Controller,Get,InternalServerErrorException,Param,Post,Put,Query,UseGuards} from '@nestjs/common';
+import {Body, Controller,Delete,Get,InternalServerErrorException,Param,Post,Put,Query,UseGuards} from '@nestjs/common';
 import {HrService} from './hr.service';
 import {FullGuard, SetPermissions, UserData} from '@Shared/Decorators';
 import {ApprovedCompanyGuard,HRPermissionGuard, IsEmployeeGuard } from '@Shared/Guards';
@@ -74,12 +74,31 @@ const Data = await this.hrService.GetJobInterviews(jobId,companyId)
 return Data
 }
 
+@SetPermissions(HRPermissions.ManageInterviews)
 @Post("SchdulaInterview/:interviewId")
 async SchdulaInterview(@Body()interviewDTO:InterviewDTO,@UserData("companyId")companyId:Types.ObjectId,@Param("interviewId",ValidMongoID)interviewId:Types.ObjectId)
 {
   const Result = await this.hrService.ScheduleInterview(interviewId,companyId,interviewDTO)
   if(!Result) throw new InternalServerErrorException("Internal Server Error")
   return {message:"Schdulaled Successfully",status:200}
+}
+
+@SetPermissions(HRPermissions.EditJobs)
+@Put("toggleJobStatus/:jobId")
+async ToggleJobStatus(@UserData("companyId")companyId:Types.ObjectId,@Param("jobId")jobId:Types.ObjectId)
+{
+const Result = await this.hrService.ToggleJobStatus(jobId,companyId)
+if(!Result) throw new InternalServerErrorException("Internal Server Error")
+return {message:"Updated Successfully",status:200}
+}
+
+@SetPermissions(HRPermissions.DeleteJobs)
+@Delete("deleteJob/:jobId")
+async DeleteJob(@UserData("companyId")companyId:Types.ObjectId,@Param("jobId")jobId:Types.ObjectId)
+{
+const Result = await this.hrService.DeleteJob(jobId,companyId)
+if(!Result) throw new InternalServerErrorException("Internal Server Error")
+return {message:"Updated Successfully",status:200}
 }
 
 }
