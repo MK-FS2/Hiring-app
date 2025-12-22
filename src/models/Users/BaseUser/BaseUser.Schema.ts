@@ -142,3 +142,19 @@ UserSchema.virtual("userName").get(function(this:User)
 {
   return this.firstName+"-"+this.lastName
 })
+
+UserSchema.post('find', function (docs: User[]) 
+{
+  for (const doc of docs) 
+  {
+    if (!doc.phoneNumber) continue;
+
+    doc.phoneNumber = CryptoJS.AES.decrypt(doc.phoneNumber,key).toString(CryptoJS.enc.Utf8);
+  }
+});
+
+UserSchema.post('findOne', function (doc: User) 
+{
+  if (!doc || !doc.phoneNumber) return;
+  doc.phoneNumber = CryptoJS.AES.decrypt(doc.phoneNumber,key).toString(CryptoJS.enc.Utf8);
+})

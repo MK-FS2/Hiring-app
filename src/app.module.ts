@@ -8,6 +8,7 @@ import { CompanyModule } from './modules/company/company.module';
 import { MangerModule } from './modules/manger/manger.module';
 import { HrModule } from './modules/hr/hr.module';
 import { ApplicantModule } from './modules/applicant/applicant.module';
+import { UsersModule } from './modules/users/users.module';
 
 @Module(
 {
@@ -20,7 +21,8 @@ import { ApplicantModule } from './modules/applicant/applicant.module';
   CompanyModule,
   MangerModule,
   HrModule,
-  ApplicantModule
+  ApplicantModule,
+  UsersModule
 
   ],
   controllers: []

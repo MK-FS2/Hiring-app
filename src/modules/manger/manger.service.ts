@@ -142,9 +142,59 @@ const folder = `${FolderTypes.App}/${FolderTypes.Users}/${hrExist._id.toString()
 await this.cloudServices.deleteFolder(folder)
 
 
+const html= `
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        color: #333;
+      }
+      .container {
+        max-width: 600px;
+        margin: 0 auto;
+        padding: 24px;
+      }
+      .title {
+        font-size: 18px;
+        font-weight: bold;
+        margin-bottom: 16px;
+      }
+      .content {
+        font-size: 14px;
+        line-height: 1.6;
+      }
+      .footer {
+        margin-top: 24px;
+        font-size: 13px;
+        color: #555;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <div class="title">Employment Termination Notice</div>
+
+      <div class="content">
+        This notice is to inform you that your position in the company has been terminated.
+        <br /><br />
+        For further clarification, please contact HR.
+      </div>
+
+      <div class="footer">
+        Regards,<br />
+        ${hrExist.firstName}<br />
+        Human Resources
+      </div>
+    </div>
+  </body>
+</html>
+`;
+
 const messageContent = `Your Postion in the company has been terminated`
-//  to refactor the message service later
-await this.mailService.sendMail(hrExist.email,messageContent,new Date(Date.now()+10*60*1000))
+await this.mailService.sendCustomMail(hrExist.email,messageContent,html)
 return true
 }
 
