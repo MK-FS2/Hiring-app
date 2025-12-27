@@ -1,5 +1,3 @@
-import { TokenRepository } from './../../models/Token/Token.Repository';
-import { CompanyRepository } from './../../models/Company/Company.Repository';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import { Applicant, ApplicantRepository } from '@Models/Users';
@@ -16,6 +14,8 @@ import { ConfirmEmailDTO, ResetPasswordDTO } from './dto';
 import { OAuth2Client } from "google-auth-library";
 import { LoginDTO } from './dto/login.dto';
 import { Types } from 'mongoose';
+import { CompanyRepository } from '@Models/Company';
+import { TokenRepository } from '@Models/Token';
 
 
 

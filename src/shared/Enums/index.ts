@@ -18,16 +18,26 @@ ForgetPassword
 }
 
 
+export enum HrActionsTypes 
+{
+  Job = "Job",
+  Application = "Application",
+  Interview = "Interview",
+  Other = "Other"
+}
+
 export enum HRPermissions 
 {
   PostJobs="PostJobs",
+
   EditJobs="EditJobs",
+
   DeleteJobs="DeleteJobs",
 
   ViewApplicants="ViewApplicants",
+
   ManageApplicants = "ManageApplicants",
 
-  ViewReports="ViewReports",
   ManageInterviews="ManageInterviews" 
 }
 

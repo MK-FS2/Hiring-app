@@ -65,7 +65,7 @@ export class Company
   deletedAt?: Date;
 
 
-  @Prop({type:[CodeSchema],required:false,default:[]})
+  @Prop({type:[CodeSchema],required:false})
   companycodes?:CodeSchema[]
 
 }
