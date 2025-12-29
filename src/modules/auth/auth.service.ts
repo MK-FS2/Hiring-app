@@ -16,7 +16,7 @@ import { LoginDTO } from './dto/login.dto';
 import { Types } from 'mongoose';
 import { CompanyRepository } from '@Models/Company';
 import { TokenRepository } from '@Models/Token';
-import { CompanyReportsRepository } from '@Models/companyReports';
+
 
 
 
@@ -33,7 +33,6 @@ private readonly configService:ConfigService,
 private readonly jwtService:JwtService,
 private readonly companyRepository:CompanyRepository,
 private readonly tokenRepository:TokenRepository,
-private readonly companyReportsRepository:CompanyReportsRepository
 ){}
 
 // To be refactored into common private methods 
@@ -118,20 +117,21 @@ async SignUpHR(hr:HREntity,otpcode:string,coverimage:Express.Multer.File,profile
    }
 
 
-   hr.companyId = CompanyExist._id
-
-   const result = await this.hrRepository.CreatDocument(hr)
-   if(!result)
+   const creationResult = await this.hrRepository.CreatDocument(hr)
+   if(!creationResult)
    {
         throw new InternalServerErrorException("Error creating")
    }
-    const folder = `${FolderTypes.App}/${FolderTypes.Users}/${result._id.toString()}/${FolderTypes.Photos}`
+
+
+    const folder = `${FolderTypes.App}/${FolderTypes.Users}/${creationResult._id.toString()}/${FolderTypes.Photos}`
     
+
     // Upload profile pic (required)
     const profile = await this.cloudServices.uploadOne(profilePic.path,folder)
     if(!profile)
     {
-     await this.hrRepository.DeleteOne({_id:result._id})
+     await this.hrRepository.DeleteOne({_id:creationResult._id})
      throw new InternalServerErrorException("Error uploading profile image")
     }
 
@@ -142,7 +142,7 @@ async SignUpHR(hr:HREntity,otpcode:string,coverimage:Express.Multer.File,profile
       cover = await this.cloudServices.uploadOne(coverimage.path,folder)
       if(!cover)
       {
-        await this.hrRepository.DeleteOne({_id:result._id})
+        await this.hrRepository.DeleteOne({_id:creationResult._id})
         await this.cloudServices.deleteFolder(folder)
         throw new InternalServerErrorException(`Error uploading cover image`)
       }
@@ -150,18 +150,18 @@ async SignUpHR(hr:HREntity,otpcode:string,coverimage:Express.Multer.File,profile
 
     // Update with both images
     const updateData = coverimage ? {coverPic:cover,profilePic:profile} : {profilePic:profile}
-    const update = await this.hrRepository.UpdateOne({_id:result._id},{$set:updateData})
+    const update = await this.hrRepository.UpdateOne({_id:creationResult._id},{$set:updateData})
     if(!update)
     {
-      await this.hrRepository.DeleteOne({_id:result._id})
+      await this.hrRepository.DeleteOne({_id:creationResult._id})
       await this.cloudServices.deleteFolder(folder)
       throw new InternalServerErrorException("Error creating")
     }
     
-   const addToCompany = await this.companyRepository.UpdateOne({_id: CompanyExist._id}, {$addToSet: {Hrs: result._id}, $pull: {companycodes: {directedTo: hr.email}}});
+   const addToCompany = await this.companyRepository.UpdateOne({_id: CompanyExist._id}, {$addToSet: {Hrs:creationResult._id}, $pull: {companycodes: {directedTo: hr.email}}});
    if(!addToCompany)
    {
-      await this.hrRepository.DeleteOne({_id:result._id})
+      await this.hrRepository.DeleteOne({_id:creationResult._id})
       await this.cloudServices.deleteFolder(folder)
       throw new InternalServerErrorException("Error creating")
    }
@@ -171,7 +171,8 @@ async SignUpHR(hr:HREntity,otpcode:string,coverimage:Express.Multer.File,profile
     {
     throw new InternalServerErrorException("Email not sent")
     }
-    return result
+    
+    return creationResult
 }
 
 async ConfirmEmail(confirmEmailDTO: ConfirmEmailDTO) 

@@ -9,7 +9,7 @@ import { CompanyRepository } from '@Models/Company';
 import { CompanyImageFlag, FolderTypes, JobStatus, Roles } from '@Shared/Enums';
 import { FileSchema } from '@Models/common';
 import { Job } from '@Models/Job';
-import { CompanyReportsRepository} from '@Models/companyReports';
+
 
 
 @Injectable()
@@ -19,18 +19,22 @@ constructor(private readonly companyRepository:CompanyRepository,
 private readonly mangerRepository:MangerRepository,
 private readonly cloudServices:CloudServices,
 private readonly jobRepository:JobRepository,
-private readonly companyReportsRepository:CompanyReportsRepository
 ){}
 
 
 
 async CreateCompany(company:CreateCompanyEntity,userid:Types.ObjectId,logo:Express.Multer.File,coverPic:Express.Multer.File,legalDocuments:Express.Multer.File[])
 {
-const havecomany  = await this.companyRepository.FindOne({createdby:userid})
-if(havecomany)
-{
- throw new ConflictException("You alredy have a company")
-}
+const [haveCompany, usedCompanyName, usedCompanyEmail] = await Promise.all(
+[
+  this.companyRepository.FindOne({ createdby: userid }),
+  this.companyRepository.FindOne({ companyname: { $regex: `^${company.companyname}$`, $options: 'i' } }),
+  this.companyRepository.FindOne({ Companyemail: company.Companyemail })
+]);
+
+if (haveCompany) throw new ConflictException("You already have a company");
+if (usedCompanyName)throw new ConflictException("Company name is used");
+if (usedCompanyEmail)throw new ConflictException("Company email is used");
 
 
 const createdCompany = await this.companyRepository.CreatDocument(company)
@@ -39,19 +43,15 @@ if(!createdCompany)
     throw new InternalServerErrorException("Error creating")
 }
 
-const createReport = await this.companyReportsRepository.CreatDocument({CompanyId:createdCompany._id})
-if(!createReport)
+const rollback = async () => 
 {
- await this.companyRepository.DeleteOne({_id:createdCompany._id})
- throw new InternalServerErrorException("Error creating")
-}
-
-const updateManger = await this.mangerRepository.UpdateOne({_id:userid},{$set:{companyId:createdCompany.id,createdAcompany:true}})
-if(!updateManger)
-{
-    await this.companyRepository.DeleteOne({_id:createdCompany._id})
-    throw new InternalServerErrorException("Error creating")
-}
+  await Promise.all(
+    [
+        this.cloudServices.deleteFolder(baseFolder),
+        this.companyRepository.DeleteOne({_id:createdCompany._id}),
+        this.mangerRepository.UpdateOne({_id:userid},{$set:{createdAcompany:false},$unset:{companyId:""}})
+    ]);
+};
 
 const baseFolder = `${FolderTypes.App}/${FolderTypes.Companies}/${createdCompany._id.toString()}`
 const imagesFolder = `${baseFolder}/${FolderTypes.Photos}`
@@ -61,30 +61,27 @@ const documentsPaths = legalDocuments.map((doc)=> doc.path)
 
 const imagespaths = [logo.path,coverPic.path]
 
-const uploadImagesResult = await this.cloudServices.uploadMany(imagespaths,imagesFolder)
-
-if(!uploadImagesResult)
+try 
 {
-    await this.companyRepository.DeleteOne({_id:createdCompany._id})
-    await this.mangerRepository.UpdateOne({_id:userid},{$set:{createdAcompany:false},$unset:{companyId:""}})
-    throw new InternalServerErrorException("Error uploading")
-}
+    const [uploadImagesResult, uploadDocumentsResult] = await Promise.all(
+     [
+        this.cloudServices.uploadMany(imagespaths, imagesFolder),
+        this.cloudServices.uploadMany(documentsPaths, documentsFolder)
+     ]
+    );
 
-const uploadDocumentsResult = await this.cloudServices.uploadMany(documentsPaths,documentsFolder)
-if(!uploadDocumentsResult)
-{   await this.cloudServices.deleteFolder(baseFolder)
-    await this.companyRepository.DeleteOne({_id:createdCompany._id})
-    await this.mangerRepository.UpdateOne({_id:userid},{$set:{createdAcompany:false},$unset:{companyId:""}})
-    throw new InternalServerErrorException("Error uploading")
-}
+   if (!uploadImagesResult || !uploadDocumentsResult) throw new InternalServerErrorException("Error uploading files");
+    
+  const updateResult = await this.companyRepository.UpdateOne({_id:createdCompany._id},{$set:{logo:uploadImagesResult[0],coverPic:uploadImagesResult[1],legalDocuments:uploadDocumentsResult}})
+  if(!updateResult)throw new InternalServerErrorException("Error uploading")
 
-const updateResult = await this.companyRepository.UpdateOne({_id:createdCompany._id},{$set:{logo:uploadImagesResult[0],coverPic:uploadImagesResult[1],legalDocuments:uploadDocumentsResult}})
-if(!updateResult)
+  const updateManger = await this.mangerRepository.UpdateOne({_id:userid},{$set:{companyId:createdCompany.id,createdAcompany:true}})
+  if(!updateManger)throw new InternalServerErrorException("Error creating")
+}
+catch(err)
 {
-    await this.cloudServices.deleteFolder(baseFolder)
-    await this.companyRepository.DeleteOne({_id:createdCompany._id})
-    await this.mangerRepository.UpdateOne({_id:userid},{$set:{createdAcompany:false},$unset:{companyId:""}})
-    throw new InternalServerErrorException("Error uploading")
+    await rollback();
+    throw new InternalServerErrorException(err)
 }
 return true
 }

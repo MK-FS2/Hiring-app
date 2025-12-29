@@ -5,13 +5,13 @@ import { AuthFactory } from './factory';
 import { CommonUserModule } from '@Shared/Modules';
 import { MailService } from '@Shared/Utils';
 import { CompanyModule } from '@modules/company';
-import { CompanyStatisticsModule } from '@modules/common';
+
 
 
 
 
 @Module({
-  imports:[CommonUserModule,CompanyModule,CompanyStatisticsModule],
+  imports:[CommonUserModule,CompanyModule],
   controllers:[AuthController],
   providers: [AuthService,AuthFactory,MailService],
 })

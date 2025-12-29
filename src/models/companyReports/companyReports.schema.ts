@@ -96,11 +96,14 @@ targetType:HrActionsTypes
 @Schema({timestamps:false})
 export class EmployeeStat
 {
-@Prop({type:Date})
+@Prop({type:SchemaTypes.ObjectId,required:true})
+employeeId:Types.ObjectId
+
+@Prop({type:Date,default:new Date()})
 joinedAt:Date 
 
 @Prop({type:[EmployeeAction],required:false,default:[]})
-actions:EmployeeAction[]
+actions?:EmployeeAction[]
 }
 
 @Schema({timestamps:false})
