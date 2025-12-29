@@ -16,13 +16,15 @@ import { LoginDTO } from './dto/login.dto';
 import { Types } from 'mongoose';
 import { CompanyRepository } from '@Models/Company';
 import { TokenRepository } from '@Models/Token';
+import { CompanyReportsRepository } from '@Models/companyReports';
 
 
 
 @Injectable()
 export class AuthService 
 {
-constructor(private readonly baseUserRepository:BaseUserRepository,
+constructor(
+private readonly baseUserRepository:BaseUserRepository,
 private readonly mangerRepository:MangerRepository,private readonly mailService:MailService,
 private readonly cloudServices:CloudServices,
 private readonly hrRepository:HRRepository,
@@ -30,7 +32,8 @@ private readonly applicantRepository:ApplicantRepository,
 private readonly configService:ConfigService,
 private readonly jwtService:JwtService,
 private readonly companyRepository:CompanyRepository,
-private readonly tokenRepository:TokenRepository
+private readonly tokenRepository:TokenRepository,
+private readonly companyReportsRepository:CompanyReportsRepository
 ){}
 
 // To be refactored into common private methods 
@@ -92,10 +95,12 @@ async SignUpManger(manger:MangerEntity,coverimage:Express.Multer.File,profilePic
     return result
 }
 
+//  remember to refactort tp promise.all so those unrelated things run concurently
 async SignUpHR(hr:HREntity,otpcode:string,coverimage:Express.Multer.File,profilePic:Express.Multer.File)
 {
   const emailExist = await this.baseUserRepository.Exist({email:hr.email})
   if(emailExist){throw new ConflictException("Email already exist")}
+
   const phoneExist = await this.baseUserRepository.Exist({phoneNumber:hr.phoneNumber})
   if(phoneExist){throw new ConflictException("Phone number already exist")}
    
@@ -321,11 +326,12 @@ async SignUpApplicantSystem(applicant:ApplicantEntity,coverimage:Express.Multer.
       }
     }
     profile = await this.cloudServices.uploadOne(profilePic.path,folder)
+    
     if(!profile)
     {
      await this.applicantRepository.DeleteOne({_id:result._id})
      await this.cloudServices.deleteFolder(folder)
-    throw new InternalServerErrorException("Error uploading image")
+     throw new InternalServerErrorException("Error uploading image")
     }
 
     if(coverimage)
@@ -347,7 +353,7 @@ async SignUpApplicantSystem(applicant:ApplicantEntity,coverimage:Express.Multer.
     return result
 }
 
-async SignUpApplicantGoogle(OAuthToken: string) {
+async SignUpApplicantGoogle(OAuthToken:string) {
   const key = this.configService.get<string>('google.clientId');
   if (!key) throw new InternalServerErrorException('Google Client ID is not configured');
 

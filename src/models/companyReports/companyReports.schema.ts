@@ -1,12 +1,9 @@
-import { SchemaTypes, Types} from 'mongoose';
-
-import {Prop,Schema,SchemaFactory} from "@nestjs/mongoose";
+import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { CarerExperienceLevels,Genders,HrActionsTypes,IndustriesFeilds} from '@Shared/Enums';
-
-
+import { SchemaTypes, Types } from 'mongoose';
 
 @Schema({timestamps:false,_id:false})
-export class JobStat 
+export class JobStat
 {
 @Prop({type:SchemaTypes.ObjectId,required:true})
 jobId:Types.ObjectId
@@ -14,7 +11,7 @@ jobId:Types.ObjectId
 @Prop({type:SchemaTypes.ObjectId,required:true})
 creatorId:Types.ObjectId 
 
-@Prop({type:SchemaTypes.ObjectId,required:false,default:0})
+@Prop({type:Number,required:false,default:0})
 timesRejected:number
 
 @Prop({type:String,enum:IndustriesFeilds,required:true})
@@ -36,59 +33,55 @@ saves:number
 applies:number
 }
 
-
 @Schema({timestamps:false,_id:false})
-export class ApplicationStat 
+export class ApplicationStat
 {
- @Prop({type:SchemaTypes.ObjectId,required:true})   
- applicationId:Types.ObjectId   
+@Prop({type:SchemaTypes.ObjectId,required:true})   
+applicationId:Types.ObjectId   
 
- @Prop({type:SchemaTypes.ObjectId,required:true})
- jobId:Types.ObjectId 
+@Prop({type:SchemaTypes.ObjectId,required:true})
+jobId:Types.ObjectId 
 
- @Prop({type:String,enum:IndustriesFeilds,required:true})
- applicantIndustry:IndustriesFeilds 
+@Prop({type:String,enum:IndustriesFeilds,required:true})
+applicantIndustry:IndustriesFeilds 
 
- @Prop({type: Date, required: true })
- appliedAt:Date  
+@Prop({type: Date, required: true })
+appliedAt:Date  
 
- @Prop({type:String,enum:Genders,required:true})
- applicantGender:Genders
+@Prop({type:String,enum:Genders,required:true})
+applicantGender:Genders
 
- @Prop({type:Number,required:false})
- matchScore:number
+@Prop({type:Number,required:false,default:0})
+matchScore:number
 
- @Prop({type:Boolean})
- applicationOutcome:boolean
-
+@Prop({type:Boolean,required:false})
+applicationOutcome:boolean
 }
 
-
 @Schema({timestamps:false,_id:false})
-export class InterviewSatat 
+export class InterviewSatat
 {
- @Prop({type:SchemaTypes.ObjectId,required:true})  
- interviewId:Types.ObjectId 
+@Prop({type:SchemaTypes.ObjectId,required:true})  
+interviewId:Types.ObjectId 
 
- @Prop({type:SchemaTypes.ObjectId,required:true})  
- jobId:Types.ObjectId
+@Prop({type:SchemaTypes.ObjectId,required:true})  
+jobId:Types.ObjectId
 
- @Prop({type:SchemaTypes.ObjectId,required:true})  
- applicationId:Types.ObjectId
+@Prop({type:SchemaTypes.ObjectId,required:true})  
+applicationId:Types.ObjectId
 
- @Prop({type:Date,required:true})
- scheduledAt: Date  
+@Prop({type:Date,required:true})
+scheduledAt: Date  
 
- @Prop({type:Date,required:false})
- completedAt: Date 
+@Prop({type:Date,required:false})
+completedAt: Date 
 
- @Prop({type:Boolean,required:false})
- interviewOutcome:boolean
+@Prop({type:Boolean,required:false})
+interviewOutcome:boolean
 }
-
 
 @Schema({timestamps:true,_id:false})
-export class EmployeeAction 
+export class EmployeeAction
 {
 @Prop({type:SchemaTypes.ObjectId,required:true})
 employeeId:Types.ObjectId  
@@ -100,37 +93,33 @@ doneAt:Date
 targetType:HrActionsTypes  
 }
 
-
 @Schema({timestamps:false})
-export class EmployeeStat 
+export class EmployeeStat
 {
 @Prop({type:Date})
 joinedAt:Date 
 
-@Prop({type:[EmployeeAction],required:false})
+@Prop({type:[EmployeeAction],required:false,default:[]})
 actions:EmployeeAction[]
 }
 
-
-@Schema({timestamps:false,_id:false})
-export class CompanyStatistics 
+@Schema({timestamps:false})
+export class CompanyStatistics
 {
 @Prop({type:SchemaTypes.ObjectId,required:true})
 CompanyId:Types.ObjectId
 
-@Prop({type:[JobStat],required:false})
-jobs:JobStat[]
+@Prop({type:[JobStat],required:false,default:[]})
+jobs?:JobStat[]
 
-@Prop({type:[ApplicationStat],required:false})
-applications:ApplicationStat[] 
+@Prop({type:[ApplicationStat],required:false,default:[]})
+applications?:ApplicationStat[] 
 
-@Prop({type:[InterviewSatat],required:false})
-interviews:InterviewSatat[]
+@Prop({type:[InterviewSatat],required:false,default:[]})
+interviews?:InterviewSatat[]
 
-@Prop({type:[EmployeeStat],required:false})
-employee:EmployeeStat[]
-
+@Prop({type:[EmployeeStat],required:false,default:[]})
+employee?:EmployeeStat[]
 }
-
 
 export const CompanyStatisticsSchema = SchemaFactory.createForClass(CompanyStatistics)

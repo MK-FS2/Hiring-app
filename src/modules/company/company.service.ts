@@ -9,6 +9,7 @@ import { CompanyRepository } from '@Models/Company';
 import { CompanyImageFlag, FolderTypes, JobStatus, Roles } from '@Shared/Enums';
 import { FileSchema } from '@Models/common';
 import { Job } from '@Models/Job';
+import { CompanyReportsRepository} from '@Models/companyReports';
 
 
 @Injectable()
@@ -17,7 +18,8 @@ export class CompanyService
 constructor(private readonly companyRepository:CompanyRepository,
 private readonly mangerRepository:MangerRepository,
 private readonly cloudServices:CloudServices,
-private readonly jobRepository:JobRepository
+private readonly jobRepository:JobRepository,
+private readonly companyReportsRepository:CompanyReportsRepository
 ){}
 
 
@@ -30,12 +32,19 @@ if(havecomany)
  throw new ConflictException("You alredy have a company")
 }
 
+
 const createdCompany = await this.companyRepository.CreatDocument(company)
 if(!createdCompany)
 {
     throw new InternalServerErrorException("Error creating")
 }
 
+const createReport = await this.companyReportsRepository.CreatDocument({CompanyId:createdCompany._id})
+if(!createReport)
+{
+ await this.companyRepository.DeleteOne({_id:createdCompany._id})
+ throw new InternalServerErrorException("Error creating")
+}
 
 const updateManger = await this.mangerRepository.UpdateOne({_id:userid},{$set:{companyId:createdCompany.id,createdAcompany:true}})
 if(!updateManger)

@@ -16,6 +16,7 @@ export class JobRepository extends AbstractRepository<Job>
         super(JobModel)
     }
 
+
 async ApplicantJobsDefault(applicantIndustry: IndustriesFeilds,applicantDegrees: Degrees[],applicantSkills: string[],queryParameters: JobQueryParameters) 
 {
   const { page, limit, jobTitle, experienceLevel, maxYear, minYear, city, country, workplaceType, minSalary, maxSalary } = queryParameters;
@@ -58,8 +59,8 @@ async ApplicantJobsDefault(applicantIndustry: IndustriesFeilds,applicantDegrees:
       const similarity = (matches / jobSkills.length) * 100;
       
       // Match: same industry with 75%+ OR different industry with 75%+
-      if (job.industry === applicantIndustry && similarity >= 75) return true;
-      if (job.industry !== applicantIndustry && similarity >= 75) return true;
+      if (job.industry === applicantIndustry && similarity >= 65) return true;
+      if (job.industry !== applicantIndustry && similarity >= 65) return true;
       
       return false;
     });

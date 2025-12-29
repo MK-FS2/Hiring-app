@@ -5,11 +5,11 @@ import { CommonUserModule } from '@Shared/Modules';
 import { MongooseModule } from '@nestjs/mongoose';
 import { Company, CompanyRepository, CompanySchema } from '@Models/Company';
 import { CompanyFactory } from './factory';
-import { JobModule } from '@modules/common';
+import { CompanyStatisticsModule, JobModule } from '@modules/common';
 
 
 @Module({
-  imports:[CommonUserModule,JobModule,MongooseModule.forFeature([{name:Company.name,schema:CompanySchema}])],
+  imports:[CommonUserModule,CompanyStatisticsModule,JobModule,MongooseModule.forFeature([{name:Company.name,schema:CompanySchema}])],
   controllers:[CompanyController],
   providers: [CompanyService,CompanyRepository,CompanyFactory],
   exports:[CompanyRepository]

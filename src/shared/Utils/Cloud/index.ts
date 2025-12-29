@@ -49,8 +49,8 @@ async deleteFolder(folder:string): Promise<boolean>
   }
  }
 
-async uploadOne(filePath: string, folder: string): Promise<FileSchema|null> 
-  {
+async uploadOne(filePath:string,folder:string):Promise<FileSchema|null> 
+{
     try 
     {
     const result = await cloudinary.uploader.upload(filePath,{ folder,access_mode:"public"});
@@ -61,7 +61,6 @@ async uploadOne(filePath: string, folder: string): Promise<FileSchema|null>
       console.log(err)
       return null
     }
-   
 }
 
  async uploadMany(filePaths: string[], folder: string): Promise<FileSchema[]|null> 
