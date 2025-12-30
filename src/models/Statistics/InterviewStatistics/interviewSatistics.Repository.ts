@@ -6,11 +6,11 @@ import { InterviewRecord } from './interviewStatistics.schema';
 
 
 @Injectable()
-export class InterviewRepository extends AbstractRepository<InterviewRecord>
+export class InterviewRecordRepository extends AbstractRepository<InterviewRecord>
 {
-constructor(@InjectModel(InterviewRecord.name) private readonly interviewModel:Model<InterviewRecord>,
+constructor(@InjectModel(InterviewRecord.name) private readonly interviewRecordModel:Model<InterviewRecord>,
 )
 {
-super(interviewModel);
+super(interviewRecordModel);
 }
 }

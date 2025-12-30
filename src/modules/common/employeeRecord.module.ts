@@ -1,5 +1,4 @@
-import { EmployeeActionRepository } from "@Models/Statistics/ApplicationStatistics";
-import { EmployeeRecord, EmployeeRecordSchema } from "@Models/Statistics/EmployeeStatistics/EmployeeRecord";
+import { EmployeeRecord, EmployeeRecordRepository, EmployeeRecordSchema } from "@Models/Statistics/EmployeeStatistics/EmployeeRecord";
 import { Module } from "@nestjs/common";
 import { MongooseModule } from "@nestjs/mongoose";
 
@@ -7,7 +6,7 @@ import { MongooseModule } from "@nestjs/mongoose";
 @Module(
 {
 imports:[MongooseModule.forFeature([{name:EmployeeRecord.name,schema:EmployeeRecordSchema}])],
-providers:[EmployeeActionRepository],
-exports:[EmployeeActionRepository]
+providers:[EmployeeRecordRepository],
+exports:[EmployeeRecordRepository]
 })
 export class EmployeeRecordModule{}

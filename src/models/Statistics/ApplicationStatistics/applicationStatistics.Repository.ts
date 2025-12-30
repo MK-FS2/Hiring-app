@@ -9,12 +9,10 @@ import { ApplicationRecord } from './applicationSatristics.schema';
 
 
 @Injectable()
-export class EmployeeActionRepository extends AbstractRepository<ApplicationRecord> 
+export class ApplicationRecordRepository extends AbstractRepository<ApplicationRecord> 
 {
   constructor(@InjectModel(ApplicationRecord.name)private readonly ApplicationRecordModel:Model<ApplicationRecord>) 
   {
     super(ApplicationRecordModel);
   }
-
-
 }

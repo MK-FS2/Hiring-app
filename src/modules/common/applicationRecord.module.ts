@@ -1,4 +1,4 @@
-import { ApplicationRecordSchema, EmployeeActionRepository } from "@Models/Statistics/ApplicationStatistics";
+import { ApplicationRecordRepository, ApplicationRecordSchema} from "@Models/Statistics/ApplicationStatistics";
 import { Module } from "@nestjs/common";
 import { MongooseModule } from "@nestjs/mongoose";
 
@@ -8,7 +8,7 @@ import { MongooseModule } from "@nestjs/mongoose";
 
 @Module({
 imports:[MongooseModule.forFeature([{name:ApplicationRecord.name,schema:ApplicationRecordSchema}])],
-providers:[EmployeeActionRepository],
-exports:[EmployeeActionRepository]
+providers:[ApplicationRecordRepository],
+exports:[ApplicationRecordRepository]
 })
 export class ApplicationRecord {}

@@ -1,7 +1,7 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Types, SchemaTypes } from 'mongoose';
 
-@Schema({ timestamps: true })
+@Schema({timestamps:false})
 export class EmployeeRecord 
 {
   @Prop({type:SchemaTypes.ObjectId,required:true,ref:'Company'})

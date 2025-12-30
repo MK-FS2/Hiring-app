@@ -8,11 +8,11 @@ import { JobRecord } from './jobRecord.schema';
 
 
 @Injectable()
-export class EmployeeActionRepository extends AbstractRepository<JobRecord> 
+export class JobRecordRepository extends AbstractRepository<JobRecord> 
 {
-  constructor(@InjectModel(JobRecord.name)private readonly employeeRecordModel:Model<JobRecord>) 
+  constructor(@InjectModel(JobRecord.name)private readonly jobRecordModel:Model<JobRecord>) 
   {
-    super(employeeRecordModel);
+    super(jobRecordModel);
   }
 
 

@@ -16,6 +16,8 @@ import { LoginDTO } from './dto/login.dto';
 import { Types } from 'mongoose';
 import { CompanyRepository } from '@Models/Company';
 import { TokenRepository } from '@Models/Token';
+import { EmployeeRecordRepository } from '@Models/Statistics/EmployeeStatistics/EmployeeRecord';
+
 
 
 
@@ -33,6 +35,7 @@ private readonly configService:ConfigService,
 private readonly jwtService:JwtService,
 private readonly companyRepository:CompanyRepository,
 private readonly tokenRepository:TokenRepository,
+private readonly employeeRecordRepository:EmployeeRecordRepository
 ){}
 
 // To be refactored into common private methods 
@@ -94,85 +97,68 @@ async SignUpManger(manger:MangerEntity,coverimage:Express.Multer.File,profilePic
     return result
 }
 
-//  remember to refactort tp promise.all so those unrelated things run concurently
+
 async SignUpHR(hr:HREntity,otpcode:string,coverimage:Express.Multer.File,profilePic:Express.Multer.File)
 {
-  const emailExist = await this.baseUserRepository.Exist({email:hr.email})
-  if(emailExist){throw new ConflictException("Email already exist")}
-
-  const phoneExist = await this.baseUserRepository.Exist({phoneNumber:hr.phoneNumber})
-  if(phoneExist){throw new ConflictException("Phone number already exist")}
-   
-  const CompanyExist = await this.companyRepository.FindOne({"companycodes.code":hr.code},{_id:1,companyname:1,"companycodes.$":1})
+  const [emailExist,phoneExist,CompanyExist] =  await Promise.all(
+  [
+   this.baseUserRepository.Exist({email:hr.email}),
+   this.baseUserRepository.Exist({phoneNumber:hr.phoneNumber}),
+   this.companyRepository.FindOne({"companycodes.code":hr.code},{_id:1,companyname:1,"companycodes.$":1})
+  ])
+  
+  if(emailExist)throw new ConflictException("Email already exist")
+  if(phoneExist)throw new ConflictException("Phone number already exist")
   if(!CompanyExist)throw new BadRequestException("Invalid code")
 
-   if(CompanyExist.companycodes && CompanyExist.companycodes[0].expireAt < new Date(Date.now()))
-   {
-    throw new UnauthorizedException("expired code")
-   }
-    
-   if(hr.email != CompanyExist.companycodes![0].directedTo)
-   {
-    throw new UnauthorizedException("You are not authourized")
-   }
-
-
+  if(CompanyExist.companycodes && CompanyExist.companycodes[0].expireAt < new Date(Date.now()))throw new UnauthorizedException("expired code")
+  if(hr.email != CompanyExist.companycodes![0].directedTo)throw new UnauthorizedException("You are not authourized")
+   
    const creationResult = await this.hrRepository.CreatDocument(hr)
-   if(!creationResult)
+   if(!creationResult)throw new InternalServerErrorException("Error creating")
+   
+   const folder = `${FolderTypes.App}/${FolderTypes.Users}/${creationResult._id.toString()}/${FolderTypes.Photos}`
+
+   const rolleback = async()=>
    {
-        throw new InternalServerErrorException("Error creating")
+    await Promise.allSettled(
+    [
+       this.hrRepository.DeleteOne({_id:creationResult._id}),
+       this.companyRepository.UpdateOne({_id:CompanyExist._id},{$pull:{Hrs:creationResult._id}}),
+       this.cloudServices.deleteFolder(folder)
+    ])
    }
 
+   try 
+   {
+    const uploads = [this.cloudServices.uploadOne(profilePic.path,folder)]
+    if(coverimage) uploads.push(this.cloudServices.uploadOne(coverimage.path,folder))
 
-    const folder = `${FolderTypes.App}/${FolderTypes.Users}/${creationResult._id.toString()}/${FolderTypes.Photos}`
-    
+    const [profile, cover] = await Promise.all(uploads)
+    if(!profile)throw new InternalServerErrorException("Error uploading profile image")
+    if(coverimage && !cover)throw new InternalServerErrorException(`Error uploading cover image`) 
 
-    // Upload profile pic (required)
-    const profile = await this.cloudServices.uploadOne(profilePic.path,folder)
-    if(!profile)
-    {
-     await this.hrRepository.DeleteOne({_id:creationResult._id})
-     throw new InternalServerErrorException("Error uploading profile image")
-    }
-
-    // Upload cover image (optional)
-    let cover:FileSchema|null = null 
-    if(coverimage)
-    {
-      cover = await this.cloudServices.uploadOne(coverimage.path,folder)
-      if(!cover)
-      {
-        await this.hrRepository.DeleteOne({_id:creationResult._id})
-        await this.cloudServices.deleteFolder(folder)
-        throw new InternalServerErrorException(`Error uploading cover image`)
-      }
-    }
-
-    // Update with both images
     const updateData = coverimage ? {coverPic:cover,profilePic:profile} : {profilePic:profile}
-    const update = await this.hrRepository.UpdateOne({_id:creationResult._id},{$set:updateData})
-    if(!update)
-    {
-      await this.hrRepository.DeleteOne({_id:creationResult._id})
-      await this.cloudServices.deleteFolder(folder)
-      throw new InternalServerErrorException("Error creating")
-    }
-    
-   const addToCompany = await this.companyRepository.UpdateOne({_id: CompanyExist._id}, {$addToSet: {Hrs:creationResult._id}, $pull: {companycodes: {directedTo: hr.email}}});
-   if(!addToCompany)
-   {
-      await this.hrRepository.DeleteOne({_id:creationResult._id})
-      await this.cloudServices.deleteFolder(folder)
-      throw new InternalServerErrorException("Error creating")
-   }
 
-    const emailResult = await this.mailService.sendMail(hr.email,otpcode,new Date(Date.now()+10*60*1000))
-    if(!emailResult)
-    {
-    throw new InternalServerErrorException("Email not sent")
-    }
-    
-    return creationResult
+    const [update,addToCompany,recordResult,emailResult] = await Promise.all(
+    [
+     this.hrRepository.UpdateOne({_id:creationResult._id},{$set:updateData}),
+     this.companyRepository.UpdateOne({_id: CompanyExist._id}, {$addToSet: {Hrs:creationResult._id}, $pull: {companycodes: {directedTo: hr.email}}}),
+     this.employeeRecordRepository.CreateEmployeeRecord(CompanyExist._id,creationResult._id),
+     this.mailService.sendMail(hr.email,otpcode,new Date(Date.now()+10*60*1000))
+    ])
+
+    if(!update)throw new InternalServerErrorException("Error creating")
+    if(!addToCompany)throw new InternalServerErrorException("Error Joining Company")
+    if(!recordResult)throw new InternalServerErrorException("Failed To Create Record")
+    if(!emailResult)throw new InternalServerErrorException(" Failed To send OTP")
+   }
+   catch(err)
+   {
+    await rolleback()
+    throw new InternalServerErrorException(err)
+   }
+   return true
 }
 
 async ConfirmEmail(confirmEmailDTO: ConfirmEmailDTO) 
