@@ -1,7 +1,7 @@
 import { applicantData } from '@Shared/Interfaces';
 import { ApplicantFactory } from './factory/index';
 import { BadGatewayException, BadRequestException, ConflictException, Injectable, InternalServerErrorException,NotFoundException} from '@nestjs/common';
-import { EducationEntity } from './entity';
+import { ApplicationRecordEntity, EducationEntity } from './entity';
 import { Types } from 'mongoose';
 import { ApplicantRepository } from '@Models/Users';
 import { CoverLetterDTO, CvDTO, DescriptionDTO, SkillDTO } from './dto';
@@ -12,6 +12,8 @@ import { JobRepository } from '@Models/Job';
 import { CompanyRepository } from '@Models/Company';
 import { ApplicationRepository } from '@Models/Application';
 import { SavedPostsRepository } from '@Models/SavedJobPosts';
+import { JobRecordRepository } from '@Models/Statistics/JobStatistics';
+import { ApplicationRecordRepository } from '@Models/Statistics/ApplicationStatistics';
 
 
 @Injectable()
@@ -25,7 +27,9 @@ constructor(
  private readonly companyRepository:CompanyRepository,
  private readonly applicantFactory:ApplicantFactory,
  private readonly applicationRepository:ApplicationRepository,
- private readonly savedPostsRepository:SavedPostsRepository
+ private readonly savedPostsRepository:SavedPostsRepository,
+ private readonly jobRecordRepository:JobRecordRepository,
+ private readonly applicationRecordRepository:ApplicationRecordRepository
 ){}
 
 
@@ -316,13 +320,13 @@ async GetJobs(applicantIndustry: IndustriesFeilds,applicantdegrees:Degrees[],app
 }
 
 
-async GetJobDetails(jobID:Types.ObjectId)
+async GetJobDetails(jobId:Types.ObjectId)
 {
-const jobExist = await this.jobRepository.FindOne({_id:jobID,status:JobStatus.Open},{mangerAlert:0,hrAlert:0,hrAlertNote:0,createdBy:0,updatedBy:0,status:0},{populate:{path:"companyId",select:"logo.URL companyname _id"}})
-if(!jobExist)
-{
-  throw new NotFoundException("No job found")
-}
+const jobExist = await this.jobRepository.FindOne({_id:jobId,status:JobStatus.Open},{mangerAlert:0,hrAlert:0,hrAlertNote:0,createdBy:0,updatedBy:0,status:0},{populate:{path:"companyId",select:"logo.URL companyname _id"}})
+if(!jobExist)throw new NotFoundException("No job found")
+
+await this.jobRecordRepository.UpdateOne({jobId},{$inc:{views:1}})
+
 return jobExist
 }
 
@@ -351,58 +355,52 @@ else
 
 async SearchCompany(companyName:string)
 {
-if(!companyName)
-{
-  throw new BadRequestException("company name is required")
-}
+if(!companyName)throw new BadRequestException("company name is required")
 
 
-const company = await this.companyRepository.FindOne({$and:[{approvedByAdmin:true},{isbanned:false},{companyname:{$regex:companyName,$options:"i"}}]},{createdby:0,__v:0,updatedAt:0,"address.id":0,"address._id":0,Companyemail:0,legalDocuments:0,approvedByAdmin:0,bannedAt:0,isbanned:0,deletedAt:0,companycodes:0, "logo.ID":0,"coverPic.ID":0,"coverPic._id":0,"logo._id":0})
+const company = await this.companyRepository.FindOne({$and:[{approvedByAdmin:true},{isbanned:false},{companyname:{$regex:companyName,$options:"i"}}]},{createdby:0,__v:0,Hrs:0,updatedAt:0,"address.id":0,"address._id":0,Companyemail:0,legalDocuments:0,approvedByAdmin:0,bannedAt:0,isbanned:0,deletedAt:0,companycodes:0, "logo.ID":0,"coverPic.ID":0,"coverPic._id":0,"logo._id":0})
 
-if(!company)
-{
-  return {message:"No company have this name"}
-}
-else 
-{
-  const leanCompanyObject = company.toObject()
+if(!company)return {message:"No company have this name"}
 
-  delete (leanCompanyObject as any).id
-  delete leanCompanyObject.Hrs
-  delete (leanCompanyObject.address as any).id
-
-  return leanCompanyObject
-}
+return company
 }
 
 async JobApplication(jobId:Types.ObjectId,CVfile:Express.Multer.File,applicantData:applicantData)
 {
-
 const jobExist = await this.jobRepository.FindOne({_id:jobId},{companyId:1})
-if(!jobExist)
-{
-  throw new NotFoundException("No job fond")
-}
+if(!jobExist)throw new NotFoundException("No job fond")
 
 const folder = `${FolderTypes.App}/${FolderTypes.Companies}/${jobExist._id.toString()}/${FolderTypes.JobPostings}/${jobId.toJSON()}/${FolderTypes.Applications}/${applicantData.applicantId.toString()}`
 
 const CV = await this.cloudServices.uploadOne(CVfile.path,folder)
-if(!CV)
-{
-  throw new InternalServerErrorException("Error uploading")
-}
+if(!CV)throw new InternalServerErrorException("Error uploading Cv")
+
 
 const constructedApplication = this.applicantFactory.createJobApplication(jobId,jobExist.companyId,applicantData,CV)
 
 const applyingResult = await this.applicationRepository.CreatDocument(constructedApplication)
-if(!applyingResult)
+if(!applyingResult)throw new InternalServerErrorException("Error Appling")
+
+const applicationrecord:ApplicationRecordEntity = 
 {
-  throw new InternalServerErrorException("Error Appling")
-}
-await this.jobRepository.UpdateOne({_id:jobId},{$inc:{ApplicationsCount:1}})
+    jobId,
+    applicationId:applyingResult._id,
+    companyId: jobExist.companyId,
+    applicantId: applicantData.applicantId,
+    applicantIndustry: applicantData.applicantIndustry,
+    applicantGender: applicantData.applicantgender
+};
+
+
+await Promise.allSettled(
+[
+this.jobRepository.UpdateOne({_id:jobId},{$inc:{ApplicationsCount:1}}),
+this.jobRecordRepository.UpdateOne({jobId},{$inc:{applications:1}}),
+this.applicationRecordRepository.AddRecord(applicationrecord)
+])     
+
 return true
 }
-
 
 async GetApplications(applicantId:Types.ObjectId)
 {
@@ -414,19 +412,27 @@ if(!application)
 return application
 }
 
-async SaveJobPost(jobId:Types.ObjectId,userId:Types.ObjectId)
+async ToggleSaveJobPost(jobId:Types.ObjectId,userId:Types.ObjectId)
 {
-const jobExist = await this.jobRepository.Exist({_id:jobId})
-if(!jobExist)
+  const [jobExist,alredysaved] = await Promise.all(
+  [
+   this.jobRepository.Exist({_id:jobId}),
+   this.savedPostsRepository.Exist({jobId,userId})
+  ])
+
+if(!jobExist)throw new NotFoundException("No job Found")
+
+if(!alredysaved) 
 {
-throw new NotFoundException("No job Found")
+const result = await this.savedPostsRepository.CreatDocument({userId:userId,jobId:jobId})
+if(!result)throw new InternalServerErrorException("Saving failed")
+await this.jobRecordRepository.UpdateOne({jobId},{$inc:{saves:1}})
+}
+else 
+{
+  await this.savedPostsRepository.DeleteOne({jobId,userId})
 }
 
-const result = await this.savedPostsRepository.CreatDocument({userId:userId,jobId:jobId})
-if(!result)
-{
-  throw new InternalServerErrorException("Saving failed")
-}
 return true
 }
 

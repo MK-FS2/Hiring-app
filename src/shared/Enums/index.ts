@@ -20,9 +20,12 @@ ForgetPassword
 
 export enum HrActionsTypes 
 {
-  Job = "Job",
-  Application = "Application",
-  Interview = "Interview",
+  CreateJob = "CreateJob",
+  UpdateJob = "UpdateJob",
+  DeleteJob = "DeleteJob",
+  ProcessApplication = "ProcessApplication",
+  SetInterview = "SetInterview",
+  ProcessInterview = "ProcessInterview",
   Other = "Other"
 }
 

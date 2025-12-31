@@ -1,4 +1,4 @@
-import { ApplicationRecordRepository, ApplicationRecordSchema} from "@Models/Statistics/ApplicationStatistics";
+import { ApplicationRecord, ApplicationRecordRepository, ApplicationRecordSchema} from "@Models/Statistics/ApplicationStatistics";
 import { Module } from "@nestjs/common";
 import { MongooseModule } from "@nestjs/mongoose";
 
@@ -11,4 +11,4 @@ imports:[MongooseModule.forFeature([{name:ApplicationRecord.name,schema:Applicat
 providers:[ApplicationRecordRepository],
 exports:[ApplicationRecordRepository]
 })
-export class ApplicationRecord {}
+export class ApplicationRecordModule{}

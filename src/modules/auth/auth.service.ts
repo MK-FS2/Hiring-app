@@ -7,7 +7,6 @@ import { BaseUserRepository, MangerRepository } from '@Models/Users';
 import { MailService } from '@Shared/Utils';
 import { CloudServices } from '@Shared/Utils/Cloud';
 import { FolderTypes, OTPTypes, UserAgent } from '@Shared/Enums';
-import { FileSchema } from '@Models/common';
 import { ApplicantEntity, HREntity, MangerEntity } from './entity';
 import * as bcrypt from 'bcrypt';
 import { ConfirmEmailDTO, ResetPasswordDTO } from './dto';
@@ -38,65 +37,63 @@ private readonly tokenRepository:TokenRepository,
 private readonly employeeRecordRepository:EmployeeRecordRepository
 ){}
 
-// To be refactored into common private methods 
-
+ 
 async SignUpManger(manger:MangerEntity,coverimage:Express.Multer.File,profilePic:Express.Multer.File,otpcode:string)
 {
-    const emailExist = await this.baseUserRepository.Exist({email:manger.email})
-    if(emailExist)
-    {
-        throw new ConflictException("Email already exist")
-    }
-    const phoneExist = await this.baseUserRepository.Exist({phoneNumber:manger.phoneNumber})
-    if(phoneExist)
-    {
-        throw new ConflictException("Phone number already exist")
-    }
-    
-    const result = await this.mangerRepository.CreatDocument(manger)
-    if(!result)
-    {
-        throw new InternalServerErrorException("Error creating")
-    }
-    const folder = `${FolderTypes.App}/${FolderTypes.Users}/${result._id.toString()}/${FolderTypes.Photos}`
-    let cover:FileSchema|null = null 
-    let profile:FileSchema|null = null
-    if(coverimage)
-    {
-      cover = await this.cloudServices.uploadOne(coverimage.path,folder)
-      if(!cover)
-      {
-        await this.mangerRepository.DeleteOne({_id:result._id})
-        throw new InternalServerErrorException(`Error uploading image ${coverimage.path}`)
-      }
-    }
-    profile = await this.cloudServices.uploadOne(profilePic.path,folder)
-    if(!profile)
-    {
-     await this.mangerRepository.DeleteOne({_id:result._id})
-     await this.cloudServices.deleteFolder(folder)
-    throw new InternalServerErrorException("Error uploading image")
-    }
+  const [emailExist,phoneExist] = await Promise.all(
+  [
+    this.baseUserRepository.Exist({email:manger.email}),
+    this.baseUserRepository.Exist({phoneNumber:manger.phoneNumber})
+  ])
 
-    if(coverimage)
-    {
-     const update = await this.mangerRepository.UpdateOne({_id:result._id},{$set:{coverPic:cover,profilePic:profile}})
-     if(!update)
-     {
-      await this.mangerRepository.DeleteOne({_id:result._id})
-      await this.cloudServices.deleteFolder(folder)
-      throw new InternalServerErrorException("Error creating")
-     }
-    }
-    
-    const emailResult = await this.mailService.sendMail(manger.email,otpcode,new Date(Date.now()+10*60*1000))
-    if(!emailResult)
-    {
-    throw new InternalServerErrorException("Email not sent")
-    }
-    return result
+  if(emailExist)throw new ConflictException("Email already exist")
+  if(phoneExist)throw new ConflictException("Phone number already exist")
+
+  const creationResult = await this.mangerRepository.CreatDocument(manger)
+  if(!creationResult)throw new InternalServerErrorException("Error creating")
+
+  const folder = `${FolderTypes.App}/${FolderTypes.Users}/${creationResult._id.toString()}/${FolderTypes.Photos}`
+
+  const rolleback = async()=>
+  {
+    await Promise.allSettled(
+    [
+      this.mangerRepository.DeleteOne({_id:creationResult._id}),
+      this.cloudServices.deleteFolder(folder)
+    ])
+  }
+
+  try
+  {
+    const uploads = [this.cloudServices.uploadOne(profilePic.path,folder)]
+    if(coverimage)uploads.push(this.cloudServices.uploadOne(coverimage.path,folder))
+
+    const [profile,cover] = await Promise.all(uploads)
+
+    if(!profile)throw new InternalServerErrorException("Error uploading profile image")
+    if(coverimage && !cover)throw new InternalServerErrorException("Error uploading cover image")
+
+    const updateData = coverimage
+    ? {coverPic:cover,profilePic:profile}
+    : {profilePic:profile}
+
+    const [update,emailResult] = await Promise.all(
+    [
+      this.mangerRepository.UpdateOne({_id:creationResult._id},{$set:updateData}),
+      this.mailService.sendMail(manger.email,otpcode,new Date(Date.now()+10*60*1000))
+    ])
+
+    if(!update)throw new InternalServerErrorException("Error creating")
+    if(!emailResult)throw new InternalServerErrorException("Email not sent")
+  }
+  catch(err)
+  {
+    await rolleback()
+    throw new InternalServerErrorException(err)
+  }
+
+  return creationResult
 }
-
 
 async SignUpHR(hr:HREntity,otpcode:string,coverimage:Express.Multer.File,profilePic:Express.Multer.File)
 {
@@ -284,60 +281,57 @@ return true
 
 async SignUpApplicantSystem(applicant:ApplicantEntity,coverimage:Express.Multer.File,profilePic:Express.Multer.File,otpcode:string)
 {
-    const emailExist = await this.baseUserRepository.Exist({email:applicant.email})
-    if(emailExist)
-    {
-        throw new ConflictException("Email already exist")
-    }
-    const phoneExist = await this.baseUserRepository.Exist({phoneNumber:applicant.phoneNumber})
-    if(phoneExist)
-    {
-        throw new ConflictException("Phone number already exist")
-    }
-    
-    const result = await this.applicantRepository.CreatDocument(applicant)
-    if(!result)
-    {
-        throw new InternalServerErrorException("Error creating")
-    }
-    const folder = `${FolderTypes.App}/${FolderTypes.Users}/${result._id.toString()}/${FolderTypes.Photos}`
-    let cover:FileSchema|null = null 
-    let profile:FileSchema|null = null
-    if(coverimage)
-    {
-      cover = await this.cloudServices.uploadOne(coverimage.path,folder)
-      if(!cover)
-      {
-        await this.applicantRepository.DeleteOne({_id:result._id})
-        throw new InternalServerErrorException(`Error uploading image ${coverimage.path}`)
-      }
-    }
-    profile = await this.cloudServices.uploadOne(profilePic.path,folder)
-    
-    if(!profile)
-    {
-     await this.applicantRepository.DeleteOne({_id:result._id})
-     await this.cloudServices.deleteFolder(folder)
-     throw new InternalServerErrorException("Error uploading image")
-    }
+  const [emailExist,phoneExist] = await Promise.all(
+  [
+    this.baseUserRepository.Exist({email:applicant.email}),
+    this.baseUserRepository.Exist({phoneNumber:applicant.phoneNumber})
+  ])
 
-    if(coverimage)
-    {
-     const update = await this.applicantRepository.UpdateOne({_id:result._id},{$set:{coverPic:cover,profilePic:profile}})
-     if(!update)
-     {
-      await this.applicantRepository.DeleteOne({_id:result._id})
-      await this.cloudServices.deleteFolder(folder)
-      throw new InternalServerErrorException("Error creating")
-     }
-    }
-    
-    const emailResult = await this.mailService.sendMail(applicant.email,otpcode,new Date(Date.now()+10*60*1000))
-    if(!emailResult)
-    {
-    throw new InternalServerErrorException("Email not sent")
-    }
-    return result
+  if(emailExist)throw new ConflictException("Email already exist")
+  if(phoneExist)throw new ConflictException("Phone number already exist")
+
+  const creationResult = await this.applicantRepository.CreatDocument(applicant)
+  if(!creationResult)throw new InternalServerErrorException("Error creating")
+
+  const folder = `${FolderTypes.App}/${FolderTypes.Users}/${creationResult._id.toString()}/${FolderTypes.Photos}`
+
+  const rolleback = async()=>
+  {
+    await Promise.allSettled(
+    [
+      this.applicantRepository.DeleteOne({_id:creationResult._id}),
+      this.cloudServices.deleteFolder(folder)
+    ])
+  }
+
+  try
+  {
+    const uploads = [this.cloudServices.uploadOne(profilePic.path,folder)]
+    if(coverimage)uploads.push(this.cloudServices.uploadOne(coverimage.path,folder))
+
+    const [profile,cover] = await Promise.all(uploads)
+
+    if(!profile)throw new InternalServerErrorException("Error uploading profile image")
+    if(coverimage && !cover)throw new InternalServerErrorException("Error uploading cover image")
+
+    const updateData = coverimage? {coverPic:cover,profilePic:profile}:{profilePic:profile}
+
+    const [update,emailResult] = await Promise.all(
+    [
+      this.applicantRepository.UpdateOne({_id:creationResult._id},{$set:updateData}),
+      this.mailService.sendMail(applicant.email,otpcode,new Date(Date.now()+10*60*1000))
+    ])
+
+    if(!update)throw new InternalServerErrorException("Error creating")
+    if(!emailResult)throw new InternalServerErrorException("Email not sent")
+  }
+  catch(err)
+  {
+    await rolleback()
+    throw new InternalServerErrorException(err)
+  }
+
+  return true
 }
 
 async SignUpApplicantGoogle(OAuthToken:string) {

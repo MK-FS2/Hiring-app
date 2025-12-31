@@ -10,7 +10,7 @@ import { Types } from "mongoose";
 export class HRFactory 
 {
 
-    CreateJob(addJobDTO:AddJobDTO,companyId:Types.ObjectId,creatorId:Types.ObjectId)
+CreateJob(addJobDTO:AddJobDTO,companyId:Types.ObjectId,creatorId:Types.ObjectId)
     {
      const job = new AddJobEntity()
       
@@ -37,7 +37,7 @@ export class HRFactory
      job.deadline = addJobDTO.deadline
      job.degree = addJobDTO.degree
      return job
-    }
+}
 
  UpdateJob(updateJobDTO:UpdateJobDTO, editorId:Types.ObjectId) 
  {

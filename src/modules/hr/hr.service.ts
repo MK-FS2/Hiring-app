@@ -1,15 +1,18 @@
-import { SavedPostsRepository } from './../../models/SavedJobPosts/savedposts.Repository';
+import { ApplicationRecordRepository } from '@Models/Statistics/ApplicationStatistics';
 /* eslint-disable @typescript-eslint/no-unsafe-argument */
 import { BadRequestException, ConflictException, Injectable, InternalServerErrorException, NotFoundException, UnauthorizedException } from '@nestjs/common';
-import { AddJobEntity, UpdateJobEntity } from './entity';
+import { AddJobEntity, JobRecordEntity, UpdateJobEntity } from './entity';
 import  { Types } from 'mongoose';
-import { ApplicationStatus, JobStatus } from '@Shared/Enums';
+import { ApplicationStatus, HrActionsTypes, JobStatus } from '@Shared/Enums';
 import { JobRepository } from '@Models/Job';
 import { ApplicationRepository } from '@Models/Application';
 import { InterviewDTO, ProcessAplicationDTO } from './dto';
 import { HRFactory } from './factory';
 import { InterviewRepository } from '@Models/Interview';
 import { MailService } from '@Shared/Utils';
+import { JobRecordRepository } from '@Models/Statistics/JobStatistics';
+import { SavedPostsRepository } from '@Models/SavedJobPosts';
+import { EmployeeActionRepository } from '@Models/Statistics/EmployeeStatistics/EmployeeActions';
 
 
 
@@ -22,7 +25,10 @@ private readonly applicationRepository:ApplicationRepository,
 private readonly interviewRepository:InterviewRepository,
 private readonly hrFactory:HRFactory,
 private readonly mailService:MailService,
-private readonly savedPostsRepository:SavedPostsRepository
+private readonly savedPostsRepository:SavedPostsRepository,
+private readonly employeeActionRepository:EmployeeActionRepository,
+private readonly jobRecordRepository:JobRecordRepository,
+private readonly applicationRecordRepository:ApplicationRecordRepository
 ){}
 
 async CreateJob(job:AddJobEntity)
@@ -42,25 +48,32 @@ if(job.minSalary && job.minSalary > job.maxSalary!)
 }
 
 const creationResult = await this.jobRepository.CreatDocument(job)
-if(!creationResult)
-{
-    throw new InternalServerErrorException("Error creating")
+if(!creationResult)throw new InternalServerErrorException("Error creating")
+
+await this.employeeActionRepository.RecordAction(job.createdBy,HrActionsTypes.CreateJob)
+
+const jobRecord:JobRecordEntity = 
+  {
+  jobId: creationResult._id,
+  companyId: job.companyId,
+  creatorId: job.createdBy,
+  requiredCarerLevel: job.experienceLevel, 
+  workplaceType: job.workplaceType,
+  jobIndustry: job.industry, 
 }
+
+await this.jobRecordRepository.AddRecord(jobRecord)
+
 return true
 }
 
 async UpdateJob(job:UpdateJobEntity,jobId:Types.ObjectId,companyId:Types.ObjectId)
 {
 const jobExist = await this.jobRepository.FindOne({_id:jobId,companyId})
-if(!jobExist)
-{
-    throw new NotFoundException("No job found")
-}
+if(!jobExist)throw new NotFoundException("No job found")
 
-if(jobExist.status == JobStatus.Open)
-{
-    throw new ConflictException("You cant Edit a live job")
-}
+
+if(jobExist.status == JobStatus.Open)throw new ConflictException("You cant Edit a live job")
 
 
 if ((job.minYears !== undefined && job.maxYears === undefined) ||(job.maxYears !== undefined && job.minYears === undefined)) 
@@ -82,10 +95,10 @@ if(job.minSalary && job.minSalary > job.maxSalary!)
 }
 
 const updateResult = await this.jobRepository.UpdateOne({_id:jobId,companyId},{$set:{...job,hrAlert:false,mangerAlert:true},$unset:{hrAlertNote:""}})
-if(!updateResult)
-{
-    throw new InternalServerErrorException("Error Updating")
-}
+if(!updateResult)throw new InternalServerErrorException("Error Updating")
+
+await this.employeeActionRepository.RecordAction(job.updatedBy!,HrActionsTypes.UpdateJob)
+
 return true
 }
 
@@ -108,7 +121,7 @@ else
 }
 }
 
-async ProcessApplicants(processAplicationDTO:ProcessAplicationDTO,companyId:Types.ObjectId)
+async ProcessApplicants(processAplicationDTO:ProcessAplicationDTO,companyId:Types.ObjectId,hrId:Types.ObjectId)
 {
 const {jobId,applicationId,decision} = processAplicationDTO
 const applicationExist = await this.applicationRepository.FindOne({_id:applicationId,jobId,companyId,status:ApplicationStatus.Pending},{applicantEmail:1})
@@ -116,14 +129,12 @@ if(!applicationExist)
 {
   throw new NotFoundException("No Application Found")
 }
-// the idea was it will be under reviw if ther was an ATS but for now i will skipp this part to be manual 
+// the idea was it will be under review if ther was an ATS but for now i will skipp this part to be manual 
 const newStatus = decision ? ApplicationStatus.Under_Interview : ApplicationStatus.Rejected
 
 const result = await this.applicationRepository.UpdateOne({_id:applicationId,jobId,companyId},{status:newStatus})
-if(!result)
-{
- throw new InternalServerErrorException("Error Updateing")
-}
+if(!result)throw new InternalServerErrorException("Error Updateing")
+
 
 if(decision)
 {
@@ -135,10 +146,15 @@ if(!creatingResult)
     await this.applicationRepository.UpdateOne({_id:applicationId,jobId,companyId},{status:ApplicationStatus.Pending})
     throw new InternalServerErrorException("Error creating Interview")
 }
+await this.applicationRecordRepository.UpdateOne({applicationId:applicationId},{$set:{applicationOutcome:true}})
 }
 else 
 {
-await this.mailService.sendCustomMail(
+await Promise.allSettled(
+[
+this.applicationRecordRepository.UpdateOne({applicationId:applicationId},{$set:{applicationOutcome:false}}),
+this.employeeActionRepository.RecordAction(hrId,HrActionsTypes.ProcessApplication),
+this.mailService.sendCustomMail(
   applicationExist.applicantEmail,
   'Application Update',
   `
@@ -158,7 +174,8 @@ await this.mailService.sendCustomMail(
       </p>
     </div>
   `
-);
+)
+])
 }
 return true
 }
@@ -183,24 +200,20 @@ else
 }
 }
 
-async ScheduleInterview(interviewId:Types.ObjectId,companyId:Types.ObjectId,interviewDTO:InterviewDTO) 
+async ScheduleInterview(interviewId:Types.ObjectId,companyId:Types.ObjectId,interviewDTO:InterviewDTO,hrId:Types.ObjectId) 
 {
  const {interviewDate,interviewTime} = interviewDTO
 
 
  const Interview = await this.interviewRepository.GetInterviewDetails(interviewId,companyId)
   
- if(Interview.status == ApplicationStatus.Under_Interview)
- {
- throw new ConflictException("Interview is already scheduled");
- }
+ if(Interview.status == ApplicationStatus.Under_Interview)throw new ConflictException("Interview is already scheduled");
+ 
 
 
   const updateResult = await this.interviewRepository.UpdateOne({_id:interviewId,companyId},{$set:{status:ApplicationStatus.Under_Interview,interviewDate:interviewDate,interviewTime:interviewTime}})
-  if(!updateResult)
-  {
-    throw new InternalServerErrorException("Error Upadting")
-  }
+  if(!updateResult)throw new InternalServerErrorException("Error Upadting")
+  
    
  const mailHtml = `
  <p>Dear <strong>${Interview.applicantName}</strong>,</p>
@@ -215,7 +228,31 @@ async ScheduleInterview(interviewId:Types.ObjectId,companyId:Types.ObjectId,inte
     await this.interviewRepository.UpdateOne({_id:interviewId,companyId},{$set:{status:ApplicationStatus.Pending},$unset:{interviewDate:"",interviewTime:""}})
     throw new InternalServerErrorException("Sending failed")
   }
+  await this.employeeActionRepository.RecordAction(hrId,HrActionsTypes.SetInterview)
   return true
+}
+
+async InterviewOutcome(interviewId:Types.ObjectId,companyId:Types.ObjectId,hrId:Types.ObjectId,decision:boolean)
+{
+const intrviewExist = await this.interviewRepository.FindOne({_id:interviewId,companyId:companyId})
+if(!intrviewExist)throw new InternalServerErrorException("No interviewfound")
+
+if(intrviewExist.status != ApplicationStatus.Under_Interview)throw new ConflictException("The InterviewDate should be set first")
+
+const interviewDateTime = new Date(`${intrviewExist.interviewDate?.toString()}T${intrviewExist.interviewTime}:00`);
+
+if (new Date() < interviewDateTime) throw new ConflictException( "Processing must happen after the interview date and time");
+
+const newStatus = decision ? ApplicationStatus.Accepted :ApplicationStatus.Rejected
+
+const updatingResult = await this.interviewRepository.UpdateOne({_id:interviewId,companyId},{$set:{status:newStatus}})
+if(!updatingResult)throw new InternalServerErrorException("Error updating")
+
+const updateapplicationResult = await this.applicationRepository.UpdateOne({_id:intrviewExist.applicationId},{$set:{status:{newStatus}}})
+if(! updateapplicationResult)throw new InternalServerErrorException("Error updating")
+
+await this.employeeActionRepository.RecordAction(hrId,HrActionsTypes.ProcessInterview)
+return true
 }
 
 async ToggleJobStatus(jobId:Types.ObjectId,companyId:Types.ObjectId)
@@ -256,37 +293,35 @@ if(!result)
 return true
 }
 
-async DeleteJob(jobId:Types.ObjectId,companyId:Types.ObjectId)
+async DeleteJob(jobId:Types.ObjectId,companyId:Types.ObjectId,hrId:Types.ObjectId)
 {
-const jobExist = await this.jobRepository.Exist({_id:jobId,companyId})
-if(!jobExist)
-{
- throw new NotFoundException("No job found")
-}
+const [jobExist,applicationsExist,InterviewsExist] = await Promise.all(
+[
+ this.jobRepository.Exist({_id:jobId,companyId}),
+ this.applicationRepository.Find({jobId,companyId,status:ApplicationStatus.Pending}),
+ this.interviewRepository.Find({jobId,companyId,$or:[{status:ApplicationStatus.Pending},{status:ApplicationStatus.Under_Interview}]})
+])
 
-const applicationsExist = await this.applicationRepository.Find({jobId,companyId,status:ApplicationStatus.Pending})
-if(applicationsExist)
-{
-  throw new ConflictException('This job cannot be deleted because there are pending applications.')
-}
+if(!jobExist)throw new NotFoundException("No job found")
+if(applicationsExist)throw new ConflictException('This job cannot be deleted because there are pending applications.')
+if(InterviewsExist)throw new ConflictException('This job cannot be deleted because there are pending or under going Interviews.')
 
-const InterviewsExist = await this.interviewRepository.Find({jobId,companyId,$or:[{status:ApplicationStatus.Pending},{status:ApplicationStatus.Under_Interview}]})
-if(InterviewsExist)
-{
-  throw new ConflictException('This job cannot be deleted because there are pending or under going Interviews.')
-}
 
 try 
 {
-    await this.jobRepository.DeleteOne({_id:jobId,companyId});
-    await this.applicationRepository.DeleteMany({jobId,companyId});
-    await this.interviewRepository.DeleteMany({jobId,companyId});
-    await this.savedPostsRepository.DeleteMany({jobId})
+  await Promise.all(
+  [
+   this.jobRepository.DeleteOne({_id:jobId,companyId}),
+   this.applicationRepository.DeleteMany({jobId,companyId}),
+   this.interviewRepository.DeleteMany({jobId,companyId}),
+   this.savedPostsRepository.DeleteMany({jobId})
+  ])
 }
  catch (error) 
 {
  throw new InternalServerErrorException(`Deleteing failed ${error.message}`)
 } 
+await this.employeeActionRepository.RecordAction(hrId,HrActionsTypes.DeleteJob)
 return true
 }
 

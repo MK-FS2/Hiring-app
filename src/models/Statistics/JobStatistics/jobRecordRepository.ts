@@ -1,3 +1,4 @@
+import { JobRecordEntity } from './../../../modules/hr/entity/createJobRecordEntity.dto';
 import AbstractRepository from '@Models/AbstractRepository';
 import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
@@ -15,6 +16,10 @@ export class JobRecordRepository extends AbstractRepository<JobRecord>
     super(jobRecordModel);
   }
 
-
+ async AddRecord(jobRecordEntity:JobRecordEntity)
+ {
+  const result = await this.CreatDocument(jobRecordEntity)
+  return result
+ }
 
 }

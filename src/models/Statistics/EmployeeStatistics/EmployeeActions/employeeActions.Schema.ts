@@ -3,14 +3,14 @@ import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Types, SchemaTypes } from 'mongoose';
 import { HrActionsTypes } from '@Shared/Enums';
 
-@Schema({ timestamps: true })
+@Schema({timestamps:false})
 export class EmployeeAction 
 {
   @Prop({type:SchemaTypes.ObjectId,required:true})
   employeeId:Types.ObjectId;
 
   @Prop({type:Date,default:()=>new Date()})
-  doneAt: Date;
+  doneAt?: Date;
 
   @Prop({type:String,enum:HrActionsTypes,required:true})
   targetType: HrActionsTypes;

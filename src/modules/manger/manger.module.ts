@@ -4,13 +4,13 @@ import { MangerController } from './manger.controller';
 import { CompanyModule } from '@modules/company';
 import { MailService } from '@Shared/Utils';
 import { CommonUserModule } from '@Shared/Modules';
-import { JobModule } from '@modules/common';
+import { JobModule, JobRecordModule } from '@modules/common';
 import { HrModule } from '@modules/hr';
 
 
 
 @Module({
-  imports:[CommonUserModule,CompanyModule,JobModule,HrModule],
+  imports:[CommonUserModule,CompanyModule,JobModule,HrModule,JobRecordModule],
   controllers: [MangerController],
   providers: [MangerService,MailService],
 })

@@ -5,7 +5,7 @@ import {HrService} from './hr.service';
 import {FullGuard, SetPermissions, UserData} from '@Shared/Decorators';
 import {ApprovedCompanyGuard,HRPermissionGuard, IsEmployeeGuard } from '@Shared/Guards';
 import {HRPermissions, Roles} from '@Shared/Enums';
-import { AddJobDTO, InterviewDTO, ProcessAplicationDTO, UpdateJobDTO } from './dto';
+import { AddJobDTO, InterviewDTO, ProcessAplicationDTO, ProcessInteviewDTO, UpdateJobDTO } from './dto';
 import { Types } from 'mongoose';
 import { ValidMongoID } from '@Shared/Pipes';
 
@@ -51,9 +51,9 @@ return Data
 
 @Put("processApplication")
 @SetPermissions(HRPermissions.ManageApplicants)
-async ProcessAplication(@Body()ProcessAplicationDTO:ProcessAplicationDTO,@UserData("companyId")companyId:Types.ObjectId,)
+async ProcessAplication(@Body()ProcessAplicationDTO:ProcessAplicationDTO,@UserData("companyId")companyId:Types.ObjectId,@UserData("_id")hrId:Types.ObjectId)
 {
-  const Result = await this.hrService.ProcessApplicants(ProcessAplicationDTO,companyId)
+  const Result = await this.hrService.ProcessApplicants(ProcessAplicationDTO,companyId,hrId)
   if(!Result) throw new InternalServerErrorException("Internal Server Error")
   return {message:"Processed Successfully",status:200}
 }
@@ -76,9 +76,9 @@ return Data
 
 @SetPermissions(HRPermissions.ManageInterviews)
 @Post("SchdulaInterview/:interviewId")
-async SchdulaInterview(@Body()interviewDTO:InterviewDTO,@UserData("companyId")companyId:Types.ObjectId,@Param("interviewId",ValidMongoID)interviewId:Types.ObjectId)
+async SchdulaInterview(@Body()interviewDTO:InterviewDTO,@UserData("companyId")companyId:Types.ObjectId,@Param("interviewId",ValidMongoID)interviewId:Types.ObjectId,@UserData("_id")hrId:Types.ObjectId)
 {
-  const Result = await this.hrService.ScheduleInterview(interviewId,companyId,interviewDTO)
+  const Result = await this.hrService.ScheduleInterview(interviewId,companyId,interviewDTO,hrId)
   if(!Result) throw new InternalServerErrorException("Internal Server Error")
   return {message:"Schdulaled Successfully",status:200}
 }
@@ -92,11 +92,20 @@ if(!Result) throw new InternalServerErrorException("Internal Server Error")
 return {message:"Updated Successfully",status:200}
 }
 
+@SetPermissions(HRPermissions.ManageInterviews)
+@Put("processInterview/:intrviewId")
+async ProcessInterview(@UserData("_id")hrId:Types.ObjectId,@Param("intrviewId",ValidMongoID)intrviewId:Types.ObjectId,@UserData("companyId")companyId:Types.ObjectId,@Body()processInteviewDTO:ProcessInteviewDTO)
+{
+const Result = await this.hrService.InterviewOutcome(intrviewId,companyId,hrId,processInteviewDTO.decision)
+if(!Result) throw new InternalServerErrorException("Internal Server Error")
+return {message:"Updated Successfully",status:200}
+}
+
 @SetPermissions(HRPermissions.DeleteJobs)
 @Delete("deleteJob/:jobId")
-async DeleteJob(@UserData("companyId")companyId:Types.ObjectId,@Param("jobId")jobId:Types.ObjectId)
+async DeleteJob(@UserData("companyId")companyId:Types.ObjectId,@Param("jobId")jobId:Types.ObjectId,@UserData("_id")hrId:Types.ObjectId)
 {
-const Result = await this.hrService.DeleteJob(jobId,companyId)
+const Result = await this.hrService.DeleteJob(jobId,companyId,hrId)
 if(!Result) throw new InternalServerErrorException("Internal Server Error")
 return {message:"Updated Successfully",status:200}
 }

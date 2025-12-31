@@ -1,4 +1,4 @@
-import { Genders } from "@Shared/Enums"
+import { Genders, IndustriesFeilds } from "@Shared/Enums"
 import { JwtPayload } from "jsonwebtoken"
 import { Types } from "mongoose"
 
@@ -9,8 +9,6 @@ FullName:string
 Email:string
 Role:string
 }
-
-
 
 export interface JobQueryParameters 
 {
@@ -34,4 +32,5 @@ export interface applicantData
  applicantPhone:string
  applicantgender:Genders
  applicantId:Types.ObjectId
+ applicantIndustry:IndustriesFeilds
 }

@@ -1,5 +1,5 @@
 import { ApplicantFactory } from './factory/index';
-import { Body, Controller, Delete, Get, InternalServerErrorException, Param, Post, Put, Query, UseGuards, UseInterceptors } from '@nestjs/common';
+import { Body, Controller, Delete, Get, InternalServerErrorException, Param, ParseIntPipe, Post, Put, Query, UseGuards, UseInterceptors } from '@nestjs/common';
 import { ApplicantService } from './applicant.service';
 import { FileData, FullGuard, UserData } from '@Shared/Decorators';
 import { CarerExperienceLevels, Degrees, Filecount, Genders, IndustriesFeilds, Roles, WorkplaceTypes } from '@Shared/Enums';
@@ -133,8 +133,8 @@ async GetApplicantJobs(
 @UserData("skills")applicantSkills:string[],
 @UserData("education")education:EducationSchema[],
 @UserData("industry")applicantIndustry:IndustriesFeilds,
-@Query("page",) page: number=1,
-@Query("limit") limit: number=10,
+@Query("page",ParseIntPipe) page: number=1,
+@Query("limit",ParseIntPipe) limit: number=10,
 @Query("jobTitle") jobTitle?: string,
 @Query("experienceLevel") experienceLevel?:CarerExperienceLevels,
 @Query("maxYear") maxYear?: number,
@@ -202,6 +202,7 @@ async ApplyforJob(
 @UserData("gender")gender:Genders,
 @UserData("email")email:string,
 @UserData("phoneNumber")phoneNumber:string,
+@UserData("industry")applicantIndustry:IndustriesFeilds,
 @Param("jobId",ValidMongoID)jobId:Types.ObjectId,
 @FileData({optional:false,fieldname:"CV",filecount:Filecount.File})CVFile:Express.Multer.File
 )
@@ -212,7 +213,8 @@ async ApplyforJob(
   applicantName:firstName+"-"+lastName,
   applicantgender:gender,
   applicantPhone:phoneNumber,
-  applicantId:applicantId
+  applicantId:applicantId,
+  applicantIndustry:applicantIndustry
  }
 
 const Result = await this.applicantService.JobApplication(jobId,CVFile,applicantData)
@@ -228,21 +230,14 @@ const Data = await this.applicantService.GetApplications(applicantId)
 return Data
 }
 
-@Post("savePost/:jobId")
+@Post("ToggleSavePost/:jobId")
 async SavingPost(@Param("jobId",ValidMongoID)jobId:Types.ObjectId,@UserData("_id")userId:Types.ObjectId)
 {
-const Result = await this.applicantService.SaveJobPost(jobId,userId)
+const Result = await this.applicantService.ToggleSaveJobPost(jobId,userId)
 if(!Result) throw new InternalServerErrorException("Internal Server Error")
-return {message:"Saved Successfully",status:200}
+return {message:"Toggled Successfully",status:200}
 }
 
-@Put("Unsave/:jobId")
-async UnsavePost(@Param("jobId",ValidMongoID)jobId:Types.ObjectId,@UserData("_id")userId:Types.ObjectId)
-{
-const Result = await this.applicantService.UnsaveJobPost(jobId,userId)
-if(!Result) throw new InternalServerErrorException("Internal Server Error")
-return {message:"Unsaved Successfully",status:200}
-}
 
 @Get("Allsavedposts")
 async GetAllSavedPosts(@UserData("_id")userId:Types.ObjectId)
@@ -250,8 +245,6 @@ async GetAllSavedPosts(@UserData("_id")userId:Types.ObjectId)
 const Data = await this.applicantService.GetAllSavedPosts(userId)
 return Data
 }
-
-
 }
 
 
