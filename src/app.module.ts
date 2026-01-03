@@ -9,6 +9,7 @@ import { MangerModule } from './modules/manger/manger.module';
 import { HrModule } from './modules/hr/hr.module';
 import { ApplicantModule } from './modules/applicant/applicant.module';
 import { UsersModule } from './modules/users/users.module';
+import { ReportsModule } from './modules/reports/reports.module';
 
 @Module(
 {
@@ -22,7 +23,8 @@ import { UsersModule } from './modules/users/users.module';
   MangerModule,
   HrModule,
   ApplicantModule,
-  UsersModule
+  UsersModule,
+  ReportsModule
 
   ],
   controllers: []
