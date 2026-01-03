@@ -15,20 +15,17 @@ import { ValidMongoID } from '@Shared/Pipes';
 @Controller('hr')
 export class HrController 
 {
-  constructor(private readonly hrService:HrService,
-   private readonly hrFactory:HRFactory
-  ) 
-  {}
+constructor(private readonly hrService:HrService,private readonly hrFactory:HRFactory){}
 
- @SetPermissions(HRPermissions.PostJobs)
- @Post("postJob")
- async PostJob(@Body()jobDTO:AddJobDTO,@UserData("companyId")companyId:Types.ObjectId,@UserData("_id")creatorId:Types.ObjectId)
+@SetPermissions(HRPermissions.PostJobs)
+@Post("postJob")
+async PostJob(@Body()jobDTO:AddJobDTO,@UserData("companyId")companyId:Types.ObjectId,@UserData("_id")creatorId:Types.ObjectId)
  {
  const job = this.hrFactory.CreateJob(jobDTO,companyId,creatorId)
  const Result = await this.hrService.CreateJob(job)
  if(!Result) throw new InternalServerErrorException("Internal Server Error")
  return {message:"Created Successfully",status:200}
- }
+}
 
 
 @SetPermissions(HRPermissions.EditJobs)
@@ -107,7 +104,7 @@ async DeleteJob(@UserData("companyId")companyId:Types.ObjectId,@Param("jobId")jo
 {
 const Result = await this.hrService.DeleteJob(jobId,companyId,hrId)
 if(!Result) throw new InternalServerErrorException("Internal Server Error")
-return {message:"Updated Successfully",status:200}
+return {message:"Deleted Successfully",status:200}
 }
 
 }

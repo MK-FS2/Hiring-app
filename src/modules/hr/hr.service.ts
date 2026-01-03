@@ -1,7 +1,6 @@
-import { ApplicationRecordRepository } from '@Models/Statistics/ApplicationStatistics';
 /* eslint-disable @typescript-eslint/no-unsafe-argument */
 import { BadRequestException, ConflictException, Injectable, InternalServerErrorException, NotFoundException, UnauthorizedException } from '@nestjs/common';
-import { AddJobEntity, JobRecordEntity, UpdateJobEntity } from './entity';
+import { AddJobEntity, InterviewRecordEntity, JobRecordEntity, UpdateJobEntity } from './entity';
 import  { Types } from 'mongoose';
 import { ApplicationStatus, HrActionsTypes, JobStatus } from '@Shared/Enums';
 import { JobRepository } from '@Models/Job';
@@ -13,6 +12,8 @@ import { MailService } from '@Shared/Utils';
 import { JobRecordRepository } from '@Models/Statistics/JobStatistics';
 import { SavedPostsRepository } from '@Models/SavedJobPosts';
 import { EmployeeActionRepository } from '@Models/Statistics/EmployeeStatistics/EmployeeActions';
+import { InterviewRecordRepository } from '@Models/Statistics/InterviewStatistics';
+import { ApplicationRecordRepository } from '@Models/Statistics/ApplicationStatistics';
 
 
 
@@ -28,7 +29,8 @@ private readonly mailService:MailService,
 private readonly savedPostsRepository:SavedPostsRepository,
 private readonly employeeActionRepository:EmployeeActionRepository,
 private readonly jobRecordRepository:JobRecordRepository,
-private readonly applicationRecordRepository:ApplicationRecordRepository
+private readonly applicationRecordRepository:ApplicationRecordRepository,
+private readonly interviewRecordRepository:InterviewRecordRepository
 ){}
 
 async CreateJob(job:AddJobEntity)
@@ -204,10 +206,14 @@ async ScheduleInterview(interviewId:Types.ObjectId,companyId:Types.ObjectId,inte
 {
  const {interviewDate,interviewTime} = interviewDTO
 
+  const [interviewExist,Interview] = await Promise.all(
+  [
+   this.interviewRepository.Exist({_id:interviewId,companyId}),
+   this.interviewRepository.GetInterviewDetails(interviewId,companyId),
+  ])
 
- const Interview = await this.interviewRepository.GetInterviewDetails(interviewId,companyId)
-  
- if(Interview.status == ApplicationStatus.Under_Interview)throw new ConflictException("Interview is already scheduled");
+  if(!interviewExist)throw new NotFoundException("No interview Found")
+  if(Interview.status == ApplicationStatus.Under_Interview)throw new ConflictException("Interview is already scheduled");
  
 
 
@@ -221,22 +227,41 @@ async ScheduleInterview(interviewId:Types.ObjectId,companyId:Types.ObjectId,inte
  <p>Please be prepared and join on time.</p>
  `;
 
-
   const sendingResult = await this.mailService.sendCustomMail(Interview.applicantEmail,"Interview Scheduled",mailHtml)
   if(!sendingResult)
   {
     await this.interviewRepository.UpdateOne({_id:interviewId,companyId},{$set:{status:ApplicationStatus.Pending},$unset:{interviewDate:"",interviewTime:""}})
     throw new InternalServerErrorException("Sending failed")
   }
-  await this.employeeActionRepository.RecordAction(hrId,HrActionsTypes.SetInterview)
-  return true
+  const application = await this.applicationRepository.FindOne({_id:Interview.applicationId})
+  if(!application)
+  {
+    await this.interviewRepository.DeleteOne({_id:interviewId})
+    throw new ConflictException("Application dont exist")
+  }
+  const interviewRecord:InterviewRecordEntity = 
+  {
+  companyId:companyId,
+  applicantId:application.applicantId,
+  jobId:application.jobId,
+  interviewId:Interview._id,
+  applicationId:application._id
+  }
+
+  await Promise.allSettled(
+  [
+  this.employeeActionRepository.RecordAction(hrId,HrActionsTypes.SetInterview),
+  this.interviewRecordRepository.AddRecord(interviewRecord)
+  ])
+
+ return true
 }
 
 async InterviewOutcome(interviewId:Types.ObjectId,companyId:Types.ObjectId,hrId:Types.ObjectId,decision:boolean)
 {
 const intrviewExist = await this.interviewRepository.FindOne({_id:interviewId,companyId:companyId})
 if(!intrviewExist)throw new InternalServerErrorException("No interviewfound")
-
+if(intrviewExist.status == ApplicationStatus.Accepted || intrviewExist.status ==  ApplicationStatus.Rejected)throw new ConflictException("The interview had been processed before")
 if(intrviewExist.status != ApplicationStatus.Under_Interview)throw new ConflictException("The InterviewDate should be set first")
 
 const interviewDateTime = new Date(`${intrviewExist.interviewDate?.toString()}T${intrviewExist.interviewTime}:00`);
@@ -248,10 +273,14 @@ const newStatus = decision ? ApplicationStatus.Accepted :ApplicationStatus.Rejec
 const updatingResult = await this.interviewRepository.UpdateOne({_id:interviewId,companyId},{$set:{status:newStatus}})
 if(!updatingResult)throw new InternalServerErrorException("Error updating")
 
-const updateapplicationResult = await this.applicationRepository.UpdateOne({_id:intrviewExist.applicationId},{$set:{status:{newStatus}}})
+const updateapplicationResult = await this.applicationRepository.UpdateOne({_id:intrviewExist.applicationId},{$set:{status:newStatus}})
 if(! updateapplicationResult)throw new InternalServerErrorException("Error updating")
 
-await this.employeeActionRepository.RecordAction(hrId,HrActionsTypes.ProcessInterview)
+await Promise.allSettled(
+[
+this.employeeActionRepository.RecordAction(hrId,HrActionsTypes.ProcessInterview),
+this.interviewRecordRepository.UpdateOne({companyId,interviewId},{$set:{interviewOutcome:decision,completedAt:new Date()}})
+])
 return true
 }
 
@@ -324,5 +353,4 @@ try
 await this.employeeActionRepository.RecordAction(hrId,HrActionsTypes.DeleteJob)
 return true
 }
-
 }

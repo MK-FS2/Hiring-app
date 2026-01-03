@@ -34,3 +34,4 @@ export interface applicantData
  applicantId:Types.ObjectId
  applicantIndustry:IndustriesFeilds
 }
+

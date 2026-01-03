@@ -3,6 +3,8 @@ import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { InterviewRecord } from './interviewStatistics.schema';
+import { InterviewRecordEntity } from '@modules/hr';
+
 
 
 @Injectable()
@@ -13,4 +15,11 @@ constructor(@InjectModel(InterviewRecord.name) private readonly interviewRecordM
 {
 super(interviewRecordModel);
 }
+
+async AddRecord(interviewRecordEntity:InterviewRecordEntity)
+{
+const result = await this.CreatDocument(interviewRecordEntity)
+return result
+}
+
 }

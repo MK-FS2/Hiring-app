@@ -1,5 +1,4 @@
-import { InterviewRepository } from "@Models/Interview";
-import { InterviewRecord, InterviewRecordSchema } from "@Models/Statistics/InterviewStatistics";
+import { InterviewRecord, InterviewRecordRepository, InterviewRecordSchema } from "@Models/Statistics/InterviewStatistics";
 import { Module } from "@nestjs/common";
 import { MongooseModule } from "@nestjs/mongoose";
 
@@ -8,7 +7,7 @@ import { MongooseModule } from "@nestjs/mongoose";
 
 @Module({
 imports:[MongooseModule.forFeature([{name:InterviewRecord.name,schema:InterviewRecordSchema}])],
-providers:[InterviewRepository],
-exports:[InterviewRepository]
+providers:[InterviewRecordRepository],
+exports:[InterviewRecordRepository]
 })
-export class InterviewReportModule {}
+export class InterviewReportModule{}

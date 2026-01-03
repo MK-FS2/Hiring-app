@@ -7,9 +7,10 @@ import { HRFactory } from './factory';
 import { AplicationModule, EmployeeActionModule, InterviewModule, JobModule, JobRecordModule, SavedPostsModule } from '@modules/common';
 import { MailService } from '@Shared/Utils';
 import { ApplicationRecordModule } from '@modules/common/applicationRecord.module';
+import { InterviewReportModule } from '@modules/common/interviewRecord.module';
 
 @Module({
-  imports:[CommonUserModule,ApplicationRecordModule,JobRecordModule,EmployeeActionModule,CompanyModule,JobModule,AplicationModule,InterviewModule,SavedPostsModule],
+  imports:[CommonUserModule,InterviewReportModule,ApplicationRecordModule,JobRecordModule,EmployeeActionModule,CompanyModule,JobModule,AplicationModule,InterviewModule,SavedPostsModule],
   controllers:[HrController],
   providers: [HrService,HRFactory,MailService],
 })
