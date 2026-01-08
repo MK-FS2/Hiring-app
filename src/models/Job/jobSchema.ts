@@ -15,7 +15,7 @@ export class Job
   description:string;
 
   @Prop({type:[String],default:[]})
-  skills: string[];
+  skills:string[];
 
   @Prop({type:String,required:false,enum:Currencies})
   currency?:Currencies;
@@ -45,8 +45,8 @@ export class Job
   })
   maxYears: number;
 
-  @Prop({type: Number,required:false})
-  maxSalary?: number;
+  @Prop({type:Number,required:false})
+  maxSalary?:number;
 
   @Prop({type: Number,required:false})
   minSalary?: number;
@@ -82,13 +82,13 @@ export class Job
   deadline:Date;
 
   @Prop({type:String,required:false,enum:JobStatus,default:JobStatus.UnderReview })
-  status?: JobStatus;
+  status?:JobStatus;
   
 
   @Prop({type:String,enum:Degrees,required:true})
   degree:Degrees
 
-  //  true mean show for manger aler so he/she can review 
+  // true mean show for manger aler so he/she can review 
   @Prop({type:Boolean,required:false,default:true})
   mangerAlert?:boolean
 

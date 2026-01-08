@@ -32,7 +32,6 @@ export class JobRecord
   @Prop({type:String,enum:IndustriesFeilds,required:true})
   jobIndustry: IndustriesFeilds;
 
-
   @Prop({type:Number,default:0,required:false})
   views?:number;
 
@@ -41,7 +40,6 @@ export class JobRecord
 
   @Prop({type:Number,default:0,required:false})
   applications?:number;
-
 }
 
 export const JobRecordSchema = SchemaFactory.createForClass(JobRecord);
