@@ -1,5 +1,5 @@
 import { BaseUserDTO } from "./baseuser.dto";
-import { IndustriesFeilds } from "@Shared/Enums";
+import { CarerExperienceLevels, IndustriesFeilds } from "@Shared/Enums";
 import {  IsEnum, IsNotEmpty, IsString, Length } from "class-validator";
 
 
@@ -15,4 +15,9 @@ titel: string;
 @IsString()
 @IsEnum(IndustriesFeilds,{each:true})
 industry: IndustriesFeilds;
+
+@IsNotEmpty()
+@IsString()
+@IsEnum(CarerExperienceLevels,{each:true})
+carerLevel:CarerExperienceLevels
 }

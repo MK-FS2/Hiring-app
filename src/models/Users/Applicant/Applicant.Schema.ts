@@ -2,7 +2,7 @@ import { FileSchema } from "@Models/common";
 import { Prop, Schema, SchemaFactory } from "@nestjs/mongoose";
 import { Types } from "mongoose";
 import { OTPSchema } from "../BaseUser";
-import { Degrees, Genders, IndustriesFeilds, UserAgent } from "@Shared/Enums";
+import { CarerExperienceLevels, Degrees, Genders, IndustriesFeilds, UserAgent } from "@Shared/Enums";
 
 
 
@@ -75,6 +75,8 @@ industry?:IndustriesFeilds
 @Prop({ type: String, required: function(this: Applicant) { return this.provider === UserAgent.System; }, minlength: [2, "Minimum of 2 characters"], maxlength: [100, "Maximum of 100 characters"] })
 titel?:string
 
+@Prop({type:String,enum:CarerExperienceLevels,required:true})
+carerLevel?:CarerExperienceLevels
 
 @Prop({type:[String],required: false,default: [],validate:{
     validator: (value: string[]) => value.length <= 15,

@@ -1,5 +1,6 @@
+import { CarerExperienceLevels } from "@Shared/Enums";
 import {PasswordRegex,PhoneRegex} from "@Shared/Validations";
-import {IsOptional,IsString,Length,Matches} from "class-validator";
+import {IsEnum, IsOptional,IsString,Length,Matches} from "class-validator";
 
 
 export class UpdatUserDTO 
@@ -24,4 +25,9 @@ phoneNumber?: string
 @IsString()
 @Matches(PasswordRegex)
 password?:string 
+
+@IsOptional()
+@IsString()
+@IsEnum(CarerExperienceLevels)
+carerLevel:CarerExperienceLevels
 }

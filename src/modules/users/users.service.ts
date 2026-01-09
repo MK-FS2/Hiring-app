@@ -1,6 +1,6 @@
-import { BaseUserRepository } from '@Models/Users';
+import { ApplicantRepository, BaseUserRepository } from '@Models/Users';
 import { Injectable, NotFoundException, ConflictException, InternalServerErrorException } from '@nestjs/common';
-import { FolderTypes } from '@Shared/Enums';
+import { FolderTypes, Roles } from '@Shared/Enums';
 import { CloudServices } from '@Shared/Utils/Cloud';
 import { Types } from 'mongoose';
 import { UpdateUserEntity } from './entity';
@@ -10,7 +10,8 @@ export class UsersService
 {
 constructor(
 private readonly baseUserRepository:BaseUserRepository,
-private readonly cloudServices:CloudServices
+private readonly cloudServices:CloudServices,
+private readonly applicantRepository:ApplicantRepository
 ){}
 
 
@@ -76,10 +77,20 @@ if(!updateResult)
 return true
 }
 
-async UpdateUserData(constructedUser:UpdateUserEntity,userId:Types.ObjectId)
+async UpdateUserData(constructedUser:UpdateUserEntity,userId:Types.ObjectId,userRole:Roles)
 {
 
-    const result = await this.baseUserRepository.UpdateOne({_id:userId},{$set:constructedUser,changedCredentialsAt:new Date(Date.now())})
+    let result:boolean
+
+    if(userRole == Roles.Applicant)
+    {
+      result = await this.applicantRepository.UpdateOne({_id:userId},{$set:constructedUser,changedCredentialsAt:new Date(Date.now())})
+    }
+    else 
+    {
+     result = await this.baseUserRepository.UpdateOne({_id:userId},{$set:constructedUser,changedCredentialsAt:new Date(Date.now())})
+    }
+
     if(!result)
     {
         throw new InternalServerErrorException("Error Updating")

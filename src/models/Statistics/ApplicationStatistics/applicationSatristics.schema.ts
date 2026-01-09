@@ -1,6 +1,6 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Types, SchemaTypes } from 'mongoose';
-import { Genders, IndustriesFeilds } from '@Shared/Enums';
+import { CarerExperienceLevels, Genders, IndustriesFeilds } from '@Shared/Enums';
 
 @Schema({timestamps:false})
 export class ApplicationRecord
@@ -23,11 +23,18 @@ applicantIndustry:IndustriesFeilds
 @Prop({type:String,enum:Genders,required:true})
 applicantGender:Genders
 
+
+@Prop({type:String,enum:CarerExperienceLevels,required:true})
+applicantCarerLevel:CarerExperienceLevels
+
 @Prop({type:Boolean,required:false})
 applicationOutcome?:boolean
 
 @Prop({type:Date,default:()=>new Date()})
 appliedAt?:Date
+
+
+
 }
 
 export const ApplicationRecordSchema = SchemaFactory.createForClass(ApplicationRecord);

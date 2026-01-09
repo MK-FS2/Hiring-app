@@ -1,4 +1,4 @@
-import { Genders, IndustriesFeilds } from "@Shared/Enums"
+import { CarerExperienceLevels, Genders, IndustriesFeilds } from "@Shared/Enums"
 import { JwtPayload } from "jsonwebtoken"
 import { Types } from "mongoose"
 
@@ -33,5 +33,6 @@ export interface applicantData
  applicantgender:Genders
  applicantId:Types.ObjectId
  applicantIndustry:IndustriesFeilds
+ applicantCarerLevel:CarerExperienceLevels
 }
 

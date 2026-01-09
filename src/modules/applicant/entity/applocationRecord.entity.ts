@@ -1,5 +1,5 @@
 import { Types } from 'mongoose';
-import { Genders, IndustriesFeilds } from '@Shared/Enums';
+import { CarerExperienceLevels, Genders, IndustriesFeilds } from '@Shared/Enums';
 import { ApplicationRecord } from '@Models/Statistics/ApplicationStatistics';
 
 export class ApplicationRecordEntity implements  ApplicationRecord 
@@ -12,4 +12,5 @@ export class ApplicationRecordEntity implements  ApplicationRecord
   applicantGender: Genders;
   applicationOutcome?: boolean;
   appliedAt?: Date;
+  applicantCarerLevel:CarerExperienceLevels
 }

@@ -2,13 +2,12 @@ import { ApplicantFactory } from './factory/index';
 import { Body, Controller, Delete, Get, InternalServerErrorException, Param, ParseIntPipe, Post, Put, Query, UseGuards, UseInterceptors } from '@nestjs/common';
 import { ApplicantService } from './applicant.service';
 import { FileData, FullGuard, UserData } from '@Shared/Decorators';
-import { CarerExperienceLevels, Degrees, Filecount, Genders, IndustriesFeilds, Roles, WorkplaceTypes } from '@Shared/Enums';
+import { CarerExperienceLevels,Filecount, Genders, IndustriesFeilds, Roles, WorkplaceTypes } from '@Shared/Enums';
 import { SkillDTO, EducationDTO, UpdateEducationDTO, CvDTO, CoverLetterDTO, DescriptionDTO} from './dto';
 import { Types } from 'mongoose';
 import { ValidMongoID } from '@Shared/Pipes';
 import { FilesInterceptor } from '@Shared/Interceptors';
 import { FileTypes } from '@Shared/Helpers';
-import { EducationSchema } from '@Models/Users';
 import { applicantData, JobQueryParameters } from '@Shared/Interfaces';
 import { AppliedBefore } from '@Shared/Guards';
 
@@ -130,12 +129,11 @@ return {message:"Description Added Successfully",status:200}
 
 @Get("applicantJobs")
 async GetApplicantJobs(
-@UserData("skills")applicantSkills:string[],
-@UserData("education")education:EducationSchema[],
 @UserData("industry")applicantIndustry:IndustriesFeilds,
+@UserData("carerLevel")applicantCarerLevel:CarerExperienceLevels,
 @Query("page",ParseIntPipe) page: number=1,
 @Query("limit",ParseIntPipe) limit: number=10,
-@Query("jobTitle") jobTitle?: string,
+@Query("jobTitle") jobTitle?:string,
 @Query("experienceLevel") experienceLevel?:CarerExperienceLevels,
 @Query("maxYear") maxYear?: number,
 @Query("minYear") minYear?: number,
@@ -146,11 +144,6 @@ async GetApplicantJobs(
 @Query("maxSalary") maxSalary?: number,
 )
 {
- let applicanDegrees: Degrees[] = [];
- if(education.length > 0 )
- {
-  applicanDegrees = education.map((ed)=> ed.degree)
- }
 
   const queryParameters: JobQueryParameters = {
     page: Number(page) || 1,
@@ -162,10 +155,10 @@ async GetApplicantJobs(
     city: city ?? "",
     country: country ?? "",
     workplaceType: workplaceType as any,
-    minSalary: minSalary ? Number(minSalary) : 0,
-    maxSalary: maxSalary ? Number(maxSalary) : 0,
+    minSalary: minSalary ? Number(minSalary) : undefined,
+    maxSalary: maxSalary ? Number(maxSalary) :undefined
   };
-  const Data = await this.applicantService.GetJobs(applicantIndustry,applicanDegrees,applicantSkills,queryParameters)
+  const Data = await this.applicantService.GetJobs(applicantIndustry,applicantCarerLevel,queryParameters)
   return Data 
 }
 
@@ -203,6 +196,7 @@ async ApplyforJob(
 @UserData("email")email:string,
 @UserData("phoneNumber")phoneNumber:string,
 @UserData("industry")applicantIndustry:IndustriesFeilds,
+@UserData("carerLevel")applicantCarerLevel:CarerExperienceLevels,
 @Param("jobId",ValidMongoID)jobId:Types.ObjectId,
 @FileData({optional:false,fieldname:"CV",filecount:Filecount.File})CVFile:Express.Multer.File
 )
@@ -214,7 +208,8 @@ async ApplyforJob(
   applicantgender:gender,
   applicantPhone:phoneNumber,
   applicantId:applicantId,
-  applicantIndustry:applicantIndustry
+  applicantIndustry:applicantIndustry,
+  applicantCarerLevel:applicantCarerLevel
  }
 
 const Result = await this.applicantService.JobApplication(jobId,CVFile,applicantData)

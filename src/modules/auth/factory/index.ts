@@ -55,6 +55,7 @@ export class AuthFactory
      applicant.gender = applicantDTO.gender
      applicant.dateofbirth = applicantDTO.dateofbirth
      applicant.provider = UserAgent.System
+     applicant.carerLevel =applicantDTO.carerLevel
      applicant.OTP=[{OTP:bcrypt.hashSync(otbcode,10),OTPtype: OTPTypes.ConfirmEmail,ExpiresAt: new Date(Date.now()+10*60*1000)}];
      applicant.titel = applicantDTO.titel
      applicant.industry = applicantDTO.industry

@@ -7,7 +7,7 @@ import { AuthGuard } from '@Shared/Guards';
 import { FileData, UserData } from '@Shared/Decorators';
 import { FilesInterceptor } from '@Shared/Interceptors';
 import { FileTypes } from '@Shared/Helpers';
-import { Filecount } from '@Shared/Enums';
+import { Filecount, Roles } from '@Shared/Enums';
 import { UpdatUserDTO } from './dto';
 
 @UseGuards(AuthGuard)
@@ -52,15 +52,16 @@ return {message:"Updated Successfully",status:200}
 }
 
 @Put("updateUser")
-async UpdateUserData(@Body() updatUserDTO:UpdatUserDTO,@UserData("_id")userId:Types.ObjectId)
+async UpdateUserData(@Body() updatUserDTO:UpdatUserDTO,@UserData("_id")userId:Types.ObjectId,@UserData("Role")userRole:Roles)
 {
 if(!updatUserDTO.firstName && !updatUserDTO.lastName && !updatUserDTO.password && !updatUserDTO.phoneNumber)
 {
   throw new BadGatewayException("Atleast one field is required")
 }
 
-const constructedUser = this.userFactory.updateUser(updatUserDTO)
-const Result = await this.usersService.UpdateUserData(constructedUser,userId)
+
+const constructedUser = this.userFactory.updateUser(updatUserDTO,userRole)
+const Result = await this.usersService.UpdateUserData(constructedUser,userId,userRole)
 if(!Result) throw new InternalServerErrorException("Internal Server Error")
 return {message:"Updated Successfully",status:200}
 }

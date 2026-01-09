@@ -22,5 +22,30 @@ export class ApplicationRecordRepository extends AbstractRepository<ApplicationR
   const result = await this.CreatDocument(applicationRecordEntity)
   return result
  }
+ 
+// async ApplicationsQualityRatio(companyId:Types.ObjectId)
+// {
+// const data = await this.ApplicationRecordModel.aggregate(
+// [
+// {$match:{companyId:companyId}},
+// {$lookup:
+//   {
+//    from:"jobrecords",
+//    localField:"jobId",
+//    foreignField:"jobId",
+//    as:"jobRecord"
+//   }
+// },
+// {
+//   $group:
+//   {
+//   _id:"jobId",
+//   TotalQualityApplicant:{$sum:{$cond:[{$and:[{$eq:["jobRecord.jobIndustry","$applicantIndustry"]},{$eq:["jobRecord."]}]}]}}
+//   }
+// }
+
+// ])
+// }
+
 
 }

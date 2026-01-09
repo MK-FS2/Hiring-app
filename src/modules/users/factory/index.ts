@@ -4,6 +4,7 @@ import { UpdatUserDTO } from './../dto/updateUserDTO';
 import { ConfigService } from '@nestjs/config';
 import * as bcrypt from 'bcrypt';
 import CryptoJS from "crypto-js";
+import { Roles } from '@Shared/Enums';
 
 
 @Injectable()
@@ -21,7 +22,7 @@ constructor(private readonly configService: ConfigService)
   this.key = key;
 }
 
-updateUser(updatUserDTO:UpdatUserDTO)
+updateUser(updatUserDTO:UpdatUserDTO,userRole:Roles)
 {
 const user = new UpdateUserEntity ()
 
@@ -29,6 +30,13 @@ if(updatUserDTO.firstName)
 {
     user.firstName = updatUserDTO.firstName
 }
+
+if(updatUserDTO.carerLevel && userRole == Roles.Applicant)
+{
+  user.carerLevel = updatUserDTO.carerLevel
+}
+
+
 if(updatUserDTO.lastName)
 {
     user.lastName = updatUserDTO.lastName
@@ -37,6 +45,7 @@ if(updatUserDTO.phoneNumber)
 {
 user.phoneNumber = CryptoJS.AES.encrypt(updatUserDTO.phoneNumber,this.key).toString()
 }
+
 
 if(updatUserDTO.password)
 {

@@ -6,7 +6,7 @@ import { Types } from 'mongoose';
 import { ApplicantRepository } from '@Models/Users';
 import { CoverLetterDTO, CvDTO, DescriptionDTO, SkillDTO } from './dto';
 import { CloudServices } from '@Shared/Utils/Cloud';
-import { Degrees, FolderTypes, IndustriesFeilds, JobStatus} from '@Shared/Enums';
+import { CarerExperienceLevels, FolderTypes, IndustriesFeilds, JobStatus} from '@Shared/Enums';
 import { JobQueryParameters } from '@Shared/Interfaces';
 import { JobRepository } from '@Models/Job';
 import { CompanyRepository } from '@Models/Company';
@@ -312,10 +312,10 @@ return true
 }
 
 
-async GetJobs(applicantIndustry: IndustriesFeilds,applicantdegrees:Degrees[],applicantSkills:string[],queryParameters:JobQueryParameters) 
+async GetJobs(applicantIndustry:IndustriesFeilds,applicantCarerLevel:CarerExperienceLevels,queryParameters:JobQueryParameters) 
 {
 
- const jobs = await this.jobRepository.ApplicantJobsDefault(applicantIndustry,applicantdegrees,applicantSkills,queryParameters)
+ const jobs = await this.jobRepository.ApplicantJobsDefault(applicantIndustry,applicantCarerLevel,queryParameters)
  return jobs
 }
 
@@ -388,7 +388,8 @@ const applicationrecord:ApplicationRecordEntity =
     companyId: jobExist.companyId,
     applicantId: applicantData.applicantId,
     applicantIndustry: applicantData.applicantIndustry,
-    applicantGender: applicantData.applicantgender
+    applicantGender: applicantData.applicantgender,
+    applicantCarerLevel:applicantData.applicantCarerLevel
 };
 
 
