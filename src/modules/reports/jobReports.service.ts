@@ -43,4 +43,59 @@ const data = await this.jobRecordRepository.StatsPerCarerLevel(companyId)
 return data
 }
 
+async JobEngagementMetrics(jobId:Types.ObjectId,companyId:Types.ObjectId)
+{
+const data = await this.jobRecordRepository.JobEngagementMetrics(jobId,companyId)
+return data
+}
+
+async JobPerformanceScore(jobId:Types.ObjectId,companyId:Types.ObjectId)
+{
+const data = await this.jobRecordRepository.JobPerformanceScore(jobId,companyId)
+return data
+}
+
+async JobWorkplaceTypeComparison(jobId:Types.ObjectId,companyId:Types.ObjectId)
+{
+const data = await this.jobRecordRepository.JobWorkplaceTypeComparison(jobId,companyId)
+return data
+}
+
+async JobTimeSeries(jobId:Types.ObjectId,companyId:Types.ObjectId)
+{
+const data = await this.jobRecordRepository.JobTimeSeries(jobId,companyId)
+return data
+}
+
+async JobIndustryRanking(jobId:Types.ObjectId,companyId:Types.ObjectId)
+{
+const data = await this.jobRecordRepository.JobIndustryRanking(jobId,companyId)
+return data
+}
+
+async OverallHiringFunnel(companyId:Types.ObjectId,from?:Date,to?:Date)
+{
+const data = await this.jobRecordRepository.OverallHiringFunnel(companyId,from,to)
+return data
+}
+
+async TopPerformingJobs(companyId:Types.ObjectId,limit?:number)
+{
+const data = await this.jobRecordRepository.TopPerformingJobs(companyId,limit)
+return data
+}
+
+async WorkplaceTypeDistribution(companyId:Types.ObjectId)
+{
+const data = await this.jobRecordRepository.WorkplaceTypeDistribution(companyId)
+return data
+}
+
+
+async CareerLevelPerformance(companyId:Types.ObjectId)
+{
+const data = await this.jobRecordRepository.CareerLevelPerformance(companyId)
+return data
+}
+
 }
