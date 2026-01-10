@@ -144,17 +144,17 @@ const constructedInterview = this.hrFactory.CreateInterview(jobId,companyId,appl
 const creatingResult = await this.interviewRepository.CreatDocument(constructedInterview)
 if(!creatingResult)
 {
-    // role back
     await this.applicationRepository.UpdateOne({_id:applicationId,jobId,companyId},{status:ApplicationStatus.Pending})
     throw new InternalServerErrorException("Error creating Interview")
 }
-await this.applicationRecordRepository.UpdateOne({applicationId:applicationId},{$set:{applicationOutcome:true}})
+await this.applicationRecordRepository.UpdateOne({applicationId:applicationId},{$set:{applicationOutcome:true,processedAt:new Date()}})
+await this.employeeActionRepository.RecordAction(hrId,HrActionsTypes.ProcessApplication)
 }
 else 
 {
 await Promise.allSettled(
 [
-this.applicationRecordRepository.UpdateOne({applicationId:applicationId},{$set:{applicationOutcome:false}}),
+this.applicationRecordRepository.UpdateOne({applicationId:applicationId},{$set:{applicationOutcome:false,processedAt:new Date()}}),
 this.employeeActionRepository.RecordAction(hrId,HrActionsTypes.ProcessApplication),
 this.mailService.sendCustomMail(
   applicationExist.applicantEmail,

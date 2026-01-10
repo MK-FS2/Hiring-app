@@ -30,9 +30,11 @@ applicantCarerLevel:CarerExperienceLevels
 @Prop({type:Boolean,required:false})
 applicationOutcome?:boolean
 
+@Prop({type:Date,required:false})
+processedAt?:Date
+
 @Prop({type:Date,default:()=>new Date()})
 appliedAt?:Date
-
 
 
 }
