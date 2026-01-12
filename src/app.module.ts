@@ -31,7 +31,6 @@ import { APP_GUARD } from '@nestjs/core';
   ApplicantModule,
   UsersModule,
   ReportsModule
-
   ],
   controllers: [],
   providers:
