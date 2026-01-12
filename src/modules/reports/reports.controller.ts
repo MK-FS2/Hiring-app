@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-unsafe-return */
 import { FullGuard, RolesAllowed, UserData } from '@Shared/Decorators';
-import { JobPerIndustry, JopIntervalDTO, ViewsToApplicationsDTO } from './dto';
+import { JobPerIndustry, JopIntervalDTO,OptionalFilterDTO } from './dto';
 import { JopReportsService } from './jobReports.service';
 import { Body, Controller, Get, Param, Query } from '@nestjs/common';
 import { Types } from 'mongoose';
@@ -11,7 +11,7 @@ import { ValidMongoID } from '@Shared/Pipes';
 
 @Controller('reports')
 @FullGuard(Roles.Manger)
-export class ReportsController 
+export class JobReportsController 
 {
 constructor(private readonly jopReportsService:JopReportsService,private readonly applicationReportService:ApplicationReportService) {}
 
@@ -36,7 +36,7 @@ async JobPerIndustry(@Body()jobPerIndustry:JobPerIndustry,@UserData("companyId")
 
 @Get("viewsToApplicationRatio")
 @RolesAllowed(Roles.Manger)
-async ViesToApplicationsRatio(@Body()viewsToApplicationsDTO:ViewsToApplicationsDTO,@UserData("companyId")companyId:Types.ObjectId)
+async ViesToApplicationsRatio(@Body()viewsToApplicationsDTO:OptionalFilterDTO,@UserData("companyId")companyId:Types.ObjectId)
 {
 const Data = await this.jopReportsService.ViewsToApplicationRation(companyId,viewsToApplicationsDTO)
 return Data

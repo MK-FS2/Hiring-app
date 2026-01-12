@@ -7,14 +7,14 @@ import { IsDate, IsEnum, IsNotEmpty, IsOptional, IsString } from "class-validato
 
 
 
-export class ViewsToApplicationsDTO
+export class OptionalFilterDTO
 {
  @IsNotEmpty()
  @IsOptional()
  @Type(()=>Date)
  @ISPastDate({message:"only past dates are allowed"})
  @IsDate()
- from:Date|undefined
+ from:Date
     
  @Type(()=>Date)
  @IsDate()

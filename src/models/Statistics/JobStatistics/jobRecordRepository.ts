@@ -7,7 +7,7 @@ import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types} from 'mongoose';
 import { JobRecord } from './jobRecord.schema';
 import { JobRecordEntity } from '@modules/hr';
-import { ViewsToApplicationsDTO } from '@modules/reports/dto';
+import { OptionalFilterDTO } from '@modules/reports/dto';
 
 @Injectable()
 export class JobRecordRepository extends AbstractRepository<JobRecord> 
@@ -141,7 +141,7 @@ export class JobRecordRepository extends AbstractRepository<JobRecord>
     };
   }
 
-async ViewsToAppliesRatio(companyId: Types.ObjectId, dto: ViewsToApplicationsDTO) {
+async ViewsToAppliesRatio(companyId: Types.ObjectId, dto:OptionalFilterDTO) {
   const { industry, from, to } = dto;
 
   const QueryFilter: any = { companyId };
@@ -584,8 +584,6 @@ const Data = ratioResult[0]?
 
     return result;
   }
-
- 
 
   async CareerLevelPerformance(companyId: Types.ObjectId) {
     // Performance metrics grouped by career level

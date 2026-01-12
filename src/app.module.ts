@@ -6,10 +6,15 @@ import { AuthModule } from './modules/auth/auth.module';
 import { GlobalModule } from '@Shared/Modules';
 import { CompanyModule } from './modules/company/company.module';
 import { MangerModule } from './modules/manger/manger.module';
-import { HrModule } from './modules/hr/hr.module';
-import { ApplicantModule } from './modules/applicant/applicant.module';
-import { UsersModule } from './modules/users/users.module';
-import { ReportsModule } from './modules/reports/reports.module';
+import {HrModule} from './modules/hr/hr.module';
+import {ApplicantModule} from './modules/applicant/applicant.module';
+import {UsersModule} from './modules/users/users.module';
+import {ReportsModule} from './modules/reports/reports.module';
+import {minutes,ThrottlerGuard, ThrottlerModule} from '@nestjs/throttler';
+import { APP_GUARD } from '@nestjs/core';
+
+  
+
 
 @Module(
 {
@@ -17,6 +22,7 @@ import { ReportsModule } from './modules/reports/reports.module';
   [
   ConfigModule.forRoot({isGlobal:true,load:[DevConfigs]}),
   MongooseModule.forRootAsync({imports:[ConfigModule],useFactory:(config:ConfigService)=>({uri:config.get<string>('DB_URL')}),inject:[ConfigService]}),
+  ThrottlerModule.forRoot([{ttl:minutes(5),limit:50}]),
   GlobalModule,
   AuthModule,
   CompanyModule,
@@ -27,6 +33,13 @@ import { ReportsModule } from './modules/reports/reports.module';
   ReportsModule
 
   ],
-  controllers: []
+  controllers: [],
+  providers:
+  [ 
+    {
+      provide:APP_GUARD,
+      useClass:ThrottlerGuard,
+    },
+  ]
 })
 export class AppModule {}

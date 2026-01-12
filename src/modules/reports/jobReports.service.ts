@@ -2,7 +2,7 @@
 import {JobRecordRepository} from '@Models/Statistics/JobStatistics';
 import {Injectable} from '@nestjs/common';
 import {Types} from 'mongoose';
-import { JobPerIndustry, ViewsToApplicationsDTO } from './dto';
+import { JobPerIndustry,OptionalFilterDTO} from './dto';
 
 @Injectable()
 export class JopReportsService 
@@ -25,7 +25,7 @@ if (!jobs) return "No jobs found in that period"
 return jobs
 }
 
-async ViewsToApplicationRation(companyId:Types.ObjectId,viewsToApplications:ViewsToApplicationsDTO)
+async ViewsToApplicationRation(companyId:Types.ObjectId,viewsToApplications:OptionalFilterDTO)
 {
  const data = this.jobRecordRepository.ViewsToAppliesRatio(companyId,viewsToApplications)
  return data 
