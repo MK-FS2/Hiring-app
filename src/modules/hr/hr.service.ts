@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unsafe-return */
 /* eslint-disable @typescript-eslint/no-unsafe-argument */
 import { BadRequestException, ConflictException, Injectable, InternalServerErrorException, NotFoundException, UnauthorizedException } from '@nestjs/common';
 import { AddJobEntity, InterviewRecordEntity, JobRecordEntity, UpdateJobEntity } from './entity';
@@ -104,24 +105,6 @@ await this.employeeActionRepository.RecordAction(job.updatedBy!,HrActionsTypes.U
 return true
 }
 
-async GetPendingJobApplications(jobId:Types.ObjectId,companyId:Types.ObjectId)
-{
-const jobExist = await this.jobRepository.FindOne({_id:jobId,companyId:companyId})
-if(!jobExist)
-{
-    throw new NotFoundException("Job No longer Exist")
-}
-
-const applications = await this.applicationRepository.Find({jobId,companyId,status:ApplicationStatus.Pending},{"cv.ID":0,"cv._id":0})
-if(!applications)
-{
-return []
-}
-else 
-{
-    return applications
-}
-}
 
 async ProcessApplicants(processAplicationDTO:ProcessAplicationDTO,companyId:Types.ObjectId,hrId:Types.ObjectId)
 {
@@ -353,4 +336,27 @@ try
 await this.employeeActionRepository.RecordAction(hrId,HrActionsTypes.DeleteJob)
 return true
 }
+
+async AllApplicationsPerJob(companyId:Types.ObjectId,jobId:Types.ObjectId)
+{
+const job = await this.jobRepository.FindOne({_id:jobId,companyId})
+if(!job) throw new NotFoundException("No Job Found")
+if(job.ApplicationsCount == 0) return {
+  pendingApplications:[],
+  applicationsUnderInterview:[],
+  completedApplications:[],
+  _id:jobId
+}
+  
+
+const data = await this.applicationRepository.AllApplicationsPerJob(companyId,jobId)
+return data
+}
+
+async AllJobswithApplications(companyId:Types.ObjectId,page:number,limit:number)
+{
+const data = await this.jobRepository.AllJobsWithApplications(companyId,page,limit)
+return data
+}
+
 }

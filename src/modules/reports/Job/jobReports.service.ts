@@ -2,7 +2,8 @@
 import {JobRecordRepository} from '@Models/Statistics/JobStatistics';
 import {Injectable} from '@nestjs/common';
 import {Types} from 'mongoose';
-import { JobPerIndustry,OptionalFilterDTO} from './dto';
+import { JobPerIndustry, OptionalFilterDTO } from '../dto';
+
 
 @Injectable()
 export class JopReportsService 

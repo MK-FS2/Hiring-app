@@ -1,20 +1,20 @@
-import { LoginDTO } from './dto/login.dto';
-import { nanoid } from 'nanoid';
-import { BadRequestException, Body, Controller, Headers, InternalServerErrorException, Param, ParseIntPipe, Post, Put, UseGuards, UseInterceptors } from '@nestjs/common';
-import { AuthService } from './auth.service';
-import {  ApplicantDTO, ConfirmEmailDTO, HRDTO, MangerDTO, ResetPasswordDTO } from './dto';
-import { AuthFactory } from './factory';
-import { FilesInterceptor } from '@Shared/Interceptors';
-import { FileTypes } from '@Shared/Helpers';
-import { Filecount, OTPTypes} from '@Shared/Enums';
-import { FileData, UserData } from '@Shared/Decorators';
-import { IsValidEmailPipe } from '@Shared/Pipes';
-import { AuthGuard } from '@Shared/Guards';
-import { Types } from 'mongoose';
+import {LoginDTO} from './dto/login.dto';
+import {nanoid} from 'nanoid';
+import {BadRequestException, Body, Controller, Headers, InternalServerErrorException, Param, ParseIntPipe, Post, Put, UseGuards, UseInterceptors } from '@nestjs/common';
+import {AuthService} from './auth.service';
+import {ApplicantDTO,ConfirmEmailDTO,HRDTO,MangerDTO,ResetPasswordDTO} from './dto';
+import {AuthFactory} from './factory';
+import {FilesInterceptor} from '@Shared/Interceptors';
+import {FileTypes} from '@Shared/Helpers';
+import {Filecount,OTPTypes} from '@Shared/Enums';
+import {FileData,UserData} from '@Shared/Decorators';
+import {IsValidEmailPipe} from '@Shared/Pipes';
+import {AuthGuard} from '@Shared/Guards';
+import {Types} from 'mongoose';
+import {minutes,Throttle} from '@nestjs/throttler';
 
 
-
-
+@Throttle({Auth:{limit:5,ttl:minutes(10)}})
 @Controller('auth')
 export class AuthController 
 {

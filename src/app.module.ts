@@ -22,7 +22,7 @@ import { APP_GUARD } from '@nestjs/core';
   [
   ConfigModule.forRoot({isGlobal:true,load:[DevConfigs]}),
   MongooseModule.forRootAsync({imports:[ConfigModule],useFactory:(config:ConfigService)=>({uri:config.get<string>('DB_URL')}),inject:[ConfigService]}),
-  ThrottlerModule.forRoot([{ttl:minutes(5),limit:50}]),
+  ThrottlerModule.forRoot([{ttl:minutes(5),limit:50,},{name:"Auth",limit:5,ttl:minutes(5)}]),
   GlobalModule,
   AuthModule,
   CompanyModule,

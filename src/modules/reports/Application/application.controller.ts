@@ -1,10 +1,10 @@
 /* eslint-disable @typescript-eslint/no-unsafe-return */
 import { FullGuard, RolesAllowed, UserData } from '@Shared/Decorators';
-import { OptionalFilterDTO } from './dto';
-import { ApplicationReportService } from './applicationReports.service';
 import { Body,Controller,Get} from '@nestjs/common';
 import { Types } from 'mongoose';
 import { Roles } from '@Shared/Enums';
+import { ApplicationReportService } from './applicationReports.service';
+import { OptionalFilterDTO } from '../dto';
 
 
 @Controller('reports')

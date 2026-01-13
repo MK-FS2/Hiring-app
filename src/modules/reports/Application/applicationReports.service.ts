@@ -2,7 +2,8 @@
 import {ApplicationRecordRepository} from '@Models/Statistics/ApplicationStatistics';
 import {Injectable} from '@nestjs/common';
 import {Types} from 'mongoose';
-import { OptionalFilterDTO } from './dto';
+import { OptionalFilterDTO } from '../dto';
+
 
 @Injectable()
 export class ApplicationReportService 

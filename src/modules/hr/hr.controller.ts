@@ -1,3 +1,4 @@
+import { ParseIntPipe } from '@nestjs/common';
 /* eslint-disable @typescript-eslint/no-unsafe-return */
 import { HRFactory } from './factory/index';
 import {Body, Controller,Delete,Get,InternalServerErrorException,Param,Post,Put,Query,UseGuards} from '@nestjs/common';
@@ -39,10 +40,10 @@ const Result = await this.hrService.UpdateJob(job,jobId,companyId)
 }
 
 @SetPermissions(HRPermissions.ViewApplicants)
-@Get("pendingjobApplication/:jobId")
-async GetAllpendingApplications(@Param("jobId")jobId:Types.ObjectId,@UserData("companyId")companyId:Types.ObjectId)
+@Get("applicationsPerJob/:jobId")
+async AllApplicationsPerJob(@Param("jobId",ValidMongoID)jobId:Types.ObjectId,@UserData("companyId")companyId:Types.ObjectId)
 {
-const Data = await this.hrService.GetPendingJobApplications(jobId,companyId)
+const Data = await this.hrService.AllApplicationsPerJob(companyId,jobId)
 return Data
 }
 
@@ -105,6 +106,15 @@ async DeleteJob(@UserData("companyId")companyId:Types.ObjectId,@Param("jobId")jo
 const Result = await this.hrService.DeleteJob(jobId,companyId,hrId)
 if(!Result) throw new InternalServerErrorException("Internal Server Error")
 return {message:"Deleted Successfully",status:200}
+}
+
+@SetPermissions(HRPermissions.ViewApplicants)
+@Get("jobswithapplications")
+async AllJobsWithApplications(@UserData("companyId") companyId: Types.ObjectId,@Query("page",ParseIntPipe) page:number = 1,@Query("limit",ParseIntPipe) limit: number = 10) {
+
+  const Data = await this.hrService.AllJobswithApplications(companyId,page,limit)
+
+  return Data
 }
 
 }

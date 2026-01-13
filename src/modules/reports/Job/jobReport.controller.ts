@@ -1,19 +1,18 @@
 /* eslint-disable @typescript-eslint/no-unsafe-return */
 import { FullGuard, RolesAllowed, UserData } from '@Shared/Decorators';
-import { JobPerIndustry, JopIntervalDTO,OptionalFilterDTO } from './dto';
 import { JopReportsService } from './jobReports.service';
 import { Body, Controller, Get, Param, Query } from '@nestjs/common';
 import { Types } from 'mongoose';
 import { Roles } from '@Shared/Enums';
-import { ApplicationReportService } from './applicationReports.service';
 import { ValidMongoID } from '@Shared/Pipes';
+import { JobPerIndustry, JopIntervalDTO, OptionalFilterDTO } from '../dto';
 
 
 @Controller('reports')
 @FullGuard(Roles.Manger)
 export class JobReportsController 
 {
-constructor(private readonly jopReportsService:JopReportsService,private readonly applicationReportService:ApplicationReportService) {}
+constructor(private readonly jopReportsService:JopReportsService) {}
 
 // JobReport
 
