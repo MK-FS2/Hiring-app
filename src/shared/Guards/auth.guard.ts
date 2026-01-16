@@ -98,7 +98,7 @@ export class AuthGuard implements CanActivate
         console.log(refreshPyload.id)
         if(!userid.equals(new Types.ObjectId(refreshPyload.id)))
         {
-          await this.baseUserRepository.UpdateOne({ _id: userid }, { $set: { isBanned: true, bannedAt: new Date(Date.now()) } });   
+          await this.baseUserRepository.UpdateOne({_id:userid},{$set:{isBanned:true,bannedAt:new Date(Date.now())}});   
           throw new UnauthorizedException("Breach of protocol you are permanently banned");
         }
       }

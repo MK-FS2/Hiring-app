@@ -12,6 +12,7 @@ import {UsersModule} from './modules/users/users.module';
 import {ReportsModule} from './modules/reports/reports.module';
 import {minutes,ThrottlerGuard, ThrottlerModule} from '@nestjs/throttler';
 import { APP_GUARD } from '@nestjs/core';
+import { AdminModule } from './modules/admin/admin.module';
 
   
 
@@ -30,7 +31,8 @@ import { APP_GUARD } from '@nestjs/core';
   HrModule,
   ApplicantModule,
   UsersModule,
-  ReportsModule
+  ReportsModule,
+  AdminModule
   ],
   controllers: [],
   providers:

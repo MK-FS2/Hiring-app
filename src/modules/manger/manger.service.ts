@@ -1,3 +1,5 @@
+import { EmployeeRecordRepository } from './../../models/Statistics/EmployeeStatistics/EmployeeRecord/employeeRecord.Repository';
+import { EmployeeActionRepository } from '@Models/Statistics/EmployeeStatistics/EmployeeActions';
 /* eslint-disable @typescript-eslint/no-unnecessary-type-assertion */import { HRRepository } from './../../models/Users/HR/HR.Repository';
 import { MailService } from '@Shared/Utils';
 import { JobRepository } from '@Models/Job';
@@ -23,7 +25,9 @@ private readonly mailService:MailService,
 private readonly hrRepository:HRRepository,
 private readonly cloudServices:CloudServices,
 private readonly jobRepository:JobRepository,
-private readonly jobRecordRepository:JobRecordRepository
+private readonly jobRecordRepository:JobRecordRepository,
+private readonly employeeActionRepository:EmployeeActionRepository,
+private readonly employeeRecordRepository:EmployeeRecordRepository
 ){}
 
 async GenerateSignUpCode(codeDTO:CodeDTO,userId:Types.ObjectId,companyId:Types.ObjectId)
@@ -181,7 +185,12 @@ const html= `
 `;
 
 const messageContent = `Your Postion in the company has been terminated`
-await this.mailService.sendCustomMail(hrExist.email,messageContent,html)
+await Promise.allSettled(
+[
+this.mailService.sendCustomMail(hrExist.email,messageContent,html),
+this.employeeActionRepository.DeleteMany({employeeId:hrId}),
+this.employeeRecordRepository.DeleteMany({employeeId:hrId,companyId:companyId})
+])
 return true
 }
 
