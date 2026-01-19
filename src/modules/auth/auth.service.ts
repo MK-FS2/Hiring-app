@@ -111,6 +111,7 @@ async SignUpHR(hr:HREntity,otpcode:string,coverimage:Express.Multer.File,profile
   if(CompanyExist.companycodes && CompanyExist.companycodes[0].expireAt < new Date(Date.now()))throw new UnauthorizedException("expired code")
   if(hr.email != CompanyExist.companycodes![0].directedTo)throw new UnauthorizedException("You are not authourized")
    
+   hr.companyId = CompanyExist._id
    const creationResult = await this.hrRepository.CreatDocument(hr)
    if(!creationResult)throw new InternalServerErrorException("Error creating")
    

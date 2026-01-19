@@ -16,7 +16,7 @@ constructor(private readonly employeeReportService:EmployeeReportService) {}
 
 @RolesAllowed(Roles.Manger)
 @Get("activitySummary/:employeeId")
-async EmployeeActivitySummary(@Param("employeeId",ValidMongoID)employeeId:string,@Body()optionalInterval:OptionalInterval,@UserData("companyId")companyId:Types.ObjectId)
+async EmployeeActivitySummary(@Param("employeeId",ValidMongoID)employeeId:Types.ObjectId,@Body()optionalInterval:OptionalInterval,@UserData("companyId")companyId:Types.ObjectId)
 {
 const Data = await this.employeeReportService.EmployeeActivitySummary(new Types.ObjectId(employeeId),companyId,optionalInterval)
 return Data
@@ -24,7 +24,7 @@ return Data
 
 @RolesAllowed(Roles.Manger)
 @Get("productivity/:employeeId")
-async EmployeeProductivity(@Param("employeeId",ValidMongoID)employeeId:string,@Body()optionalInterval:OptionalInterval,@UserData("companyId")companyId:Types.ObjectId)
+async EmployeeProductivity(@Param("employeeId",ValidMongoID)employeeId:Types.ObjectId,@Body()optionalInterval:OptionalInterval,@UserData("companyId")companyId:Types.ObjectId)
 {
 const Data = await this.employeeReportService.EmployeeProductivity(new Types.ObjectId(employeeId),companyId,optionalInterval)
 return Data
@@ -32,7 +32,7 @@ return Data
 
 @RolesAllowed(Roles.Manger)
 @Get("timeline/:employeeId")
-async EmployeeActionTimeline(@Param("employeeId",ValidMongoID)employeeId:string,@Body()optionalInterval:OptionalInterval,@UserData("companyId")companyId:Types.ObjectId)
+async EmployeeActionTimeline(@Param("employeeId",ValidMongoID)employeeId:Types.ObjectId,@Body()optionalInterval:OptionalInterval,@UserData("companyId")companyId:Types.ObjectId)
 {
 const Data = await this.employeeReportService.EmployeeActionTimeline(new Types.ObjectId(employeeId),companyId,optionalInterval)
 return Data
@@ -40,7 +40,7 @@ return Data
 
 @RolesAllowed(Roles.Manger)
 @Get("performanceScore/:employeeId")
-async EmployeePerformanceScore(@Param("employeeId",ValidMongoID)employeeId:string,@Body()optionalInterval:OptionalInterval,@UserData("companyId")companyId:Types.ObjectId)
+async EmployeePerformanceScore(@Param("employeeId",ValidMongoID)employeeId:Types.ObjectId,@Body()optionalInterval:OptionalInterval,@UserData("companyId")companyId:Types.ObjectId)
 {
 const Data = await this.employeeReportService.EmployeePerformanceScore(new Types.ObjectId(employeeId),companyId,optionalInterval)
 return Data
@@ -48,7 +48,7 @@ return Data
 
 @RolesAllowed(Roles.Manger)
 @Get("actionBreakdown/:employeeId")
-async EmployeeActionTypeBreakdown(@Param("employeeId",ValidMongoID)employeeId:string,@Body()optionalInterval:OptionalInterval,@UserData("companyId")companyId:Types.ObjectId)
+async EmployeeActionTypeBreakdown(@Param("employeeId",ValidMongoID)employeeId:Types.ObjectId,@Body()optionalInterval:OptionalInterval,@UserData("companyId")companyId:Types.ObjectId)
 {
 const Data = await this.employeeReportService.EmployeeActionTypeBreakdown(new Types.ObjectId(employeeId),companyId,optionalInterval)
 return Data

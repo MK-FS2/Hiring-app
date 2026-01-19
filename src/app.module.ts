@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { MongooseModule } from '@nestjs/mongoose';
 import { DevConfigs } from '@Shared/configs';
@@ -13,6 +13,7 @@ import {ReportsModule} from './modules/reports/reports.module';
 import {minutes,ThrottlerGuard, ThrottlerModule} from '@nestjs/throttler';
 import { APP_GUARD } from '@nestjs/core';
 import { AdminModule } from './modules/admin/admin.module';
+import { LoggerMiddleware } from '@Shared/Middleware/logger.middleware';
 
   
 
@@ -43,4 +44,8 @@ import { AdminModule } from './modules/admin/admin.module';
     },
   ]
 })
-export class AppModule {}
+export class AppModule implements NestModule {
+  configure(consumer: MiddlewareConsumer) {
+    consumer.apply(LoggerMiddleware).forRoutes("*")
+  }
+}

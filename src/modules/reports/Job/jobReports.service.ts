@@ -80,7 +80,7 @@ const data = await this.jobRecordRepository.OverallHiringFunnel(companyId,from,t
 return data
 }
 
-async TopPerformingJobs(companyId:Types.ObjectId,limit?:number)
+async TopPerformingJobs(companyId:Types.ObjectId,limit:number)
 {
 const data = await this.jobRecordRepository.TopPerformingJobs(companyId,limit)
 return data

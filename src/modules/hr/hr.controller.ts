@@ -1,4 +1,4 @@
-import { ParseIntPipe } from '@nestjs/common';
+import { DefaultValuePipe, ParseIntPipe } from '@nestjs/common';
 /* eslint-disable @typescript-eslint/no-unsafe-return */
 import { HRFactory } from './factory/index';
 import {Body, Controller,Delete,Get,InternalServerErrorException,Param,Post,Put,Query,UseGuards} from '@nestjs/common';
@@ -58,7 +58,7 @@ async ProcessAplication(@Body()ProcessAplicationDTO:ProcessAplicationDTO,@UserDa
 
 @SetPermissions(HRPermissions.ManageInterviews)
 @Get("interviewEvents")
-async GetAllInterview(@UserData("companyId")companyId:Types.ObjectId,@Query("page")page:number=1,@Query("limit")limit:number=10)
+async GetAllInterview(@UserData("companyId")companyId:Types.ObjectId,@Query("page",new DefaultValuePipe(1),ParseIntPipe)page:number,@Query("limit",new DefaultValuePipe(10),ParseIntPipe)limit:number)
 {
 const Data = await this.hrService.GetAllInterviews(companyId,page,limit)
 return Data 
@@ -83,7 +83,7 @@ async SchdulaInterview(@Body()interviewDTO:InterviewDTO,@UserData("companyId")co
 
 @SetPermissions(HRPermissions.EditJobs)
 @Put("toggleJobStatus/:jobId")
-async ToggleJobStatus(@UserData("companyId")companyId:Types.ObjectId,@Param("jobId")jobId:Types.ObjectId)
+async ToggleJobStatus(@UserData("companyId")companyId:Types.ObjectId,@Param("jobId",ValidMongoID)jobId:Types.ObjectId)
 {
 const Result = await this.hrService.ToggleJobStatus(jobId,companyId)
 if(!Result) throw new InternalServerErrorException("Internal Server Error")
@@ -101,7 +101,7 @@ return {message:"Updated Successfully",status:200}
 
 @SetPermissions(HRPermissions.DeleteJobs)
 @Delete("deleteJob/:jobId")
-async DeleteJob(@UserData("companyId")companyId:Types.ObjectId,@Param("jobId")jobId:Types.ObjectId,@UserData("_id")hrId:Types.ObjectId)
+async DeleteJob(@UserData("companyId")companyId:Types.ObjectId,@Param("jobId",ValidMongoID)jobId:Types.ObjectId,@UserData("_id")hrId:Types.ObjectId)
 {
 const Result = await this.hrService.DeleteJob(jobId,companyId,hrId)
 if(!Result) throw new InternalServerErrorException("Internal Server Error")
@@ -110,7 +110,7 @@ return {message:"Deleted Successfully",status:200}
 
 @SetPermissions(HRPermissions.ViewApplicants)
 @Get("jobswithapplications")
-async AllJobsWithApplications(@UserData("companyId") companyId: Types.ObjectId,@Query("page",ParseIntPipe) page:number = 1,@Query("limit",ParseIntPipe) limit: number = 10) {
+async AllJobsWithApplications(@UserData("companyId") companyId: Types.ObjectId,@Query("page",new DefaultValuePipe(1),ParseIntPipe) page:number,@Query("limit",new DefaultValuePipe(10),ParseIntPipe)limit:number) {
 
   const Data = await this.hrService.AllJobswithApplications(companyId,page,limit)
 

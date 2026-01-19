@@ -155,4 +155,3 @@ export enum ApplicationStatus
     Rejected = "Rejected"
 }
 
-

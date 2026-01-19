@@ -12,6 +12,7 @@ async function bootstrap() {
 
   app.useGlobalFilters(new CustomException());
 
+  app.enableCors({origin:'*',methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',credentials: false});
   const config = app.get(ConfigService);
   const port = Number(config.get('port')) || 5000;
 

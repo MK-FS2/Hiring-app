@@ -1,11 +1,11 @@
 import { ApplicantFactory } from './factory/index';
-import { Body, Controller, Delete, Get, InternalServerErrorException, Param, ParseIntPipe, Post, Put, Query, UseGuards, UseInterceptors } from '@nestjs/common';
+import { Body, Controller, DefaultValuePipe, Delete, Get, InternalServerErrorException, Param, ParseIntPipe, Post, Put, Query, UseGuards, UseInterceptors } from '@nestjs/common';
 import { ApplicantService } from './applicant.service';
 import { FileData, FullGuard, UserData } from '@Shared/Decorators';
 import { CarerExperienceLevels,Filecount, Genders, IndustriesFeilds, Roles, WorkplaceTypes } from '@Shared/Enums';
 import { SkillDTO, EducationDTO, UpdateEducationDTO, CvDTO, CoverLetterDTO, DescriptionDTO} from './dto';
 import { Types } from 'mongoose';
-import { ValidMongoID } from '@Shared/Pipes';
+import { ValidMongoID, ValidStringPipe } from '@Shared/Pipes';
 import { FilesInterceptor } from '@Shared/Interceptors';
 import { FileTypes } from '@Shared/Helpers';
 import { applicantData, JobQueryParameters } from '@Shared/Interfaces';
@@ -171,7 +171,7 @@ return Data
 
 
 @Get("companyJobs/:companyId")
-async GetCompanyJobs(@Param("companyId",ValidMongoID)companyId:Types.ObjectId,@Query("page")page:number=1,@Query("limit")limit:number=10)
+async GetCompanyJobs(@Param("companyId",ValidMongoID)companyId:Types.ObjectId,@Query("page",new DefaultValuePipe(1),ParseIntPipe)page:number,@Query("limit",new DefaultValuePipe(1),ParseIntPipe)limit:number)
 {
 const Data = await this.applicantService.GetcompanyJobs(companyId,page,limit)
 return Data
@@ -179,7 +179,7 @@ return Data
 
 
 @Get("searchCompany/:companyName")
-async SearchCompany(@Param("companyName")companyName:string)
+async SearchCompany(@Param("companyName",new ValidStringPipe(1,100))companyName:string)
 {
 const Data = await this.applicantService.SearchCompany(companyName)
 return Data

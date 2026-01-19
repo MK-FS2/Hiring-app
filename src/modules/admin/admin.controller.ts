@@ -14,10 +14,17 @@ export class AdminController
 constructor(private readonly adminService: AdminService){}
 
 @UseGuards(AuthGuard,AdminGuard)
-@Get("unapprovedComanies")
-async AllApprovedCompanies(@Query('page', new DefaultValuePipe(1),ParseIntPipe) page: number,@Query('limit', new DefaultValuePipe(10),ParseIntPipe)limit:number)
+@Get("unapprovedCompanies")
+async AllUnApprovedCompanies(@Query('page', new DefaultValuePipe(1),ParseIntPipe) page: number,@Query('limit', new DefaultValuePipe(10),ParseIntPipe)limit:number)
 {
 const Data = await this.adminService.CompaniesTobeConfirmed(page,limit)
+return Data
+}
+
+@Get("approvedCompanies")
+async AllApprovedCompanies(@Query('page',new DefaultValuePipe(1),ParseIntPipe)page:number,@Query('limit',new DefaultValuePipe(10),ParseIntPipe)limit:number)
+{
+const Data = await this.adminService.AllAppovedComapnies(page,limit)
 return Data
 }
 
@@ -34,6 +41,23 @@ async BannedCompanies(@Query("page",new DefaultValuePipe(1),ParseIntPipe)page:nu
 {
     const Data = await this.adminService.AllBannedComapies(page,limit,companyName)
     return Data
+}
+
+@Post("UnbannedCompany/:companyId")
+async UnBannedCompany(@Param("companyId",ValidMongoID)companyId:Types.ObjectId)
+{
+const Result = await this.adminService.UnBannedACompany(companyId)
+if(!Result) throw new InternalServerErrorException("Internal Server Error")
+return {message:"Unbanned succsessfully"}
+}
+
+@Post("bannedACompany/:companyId")
+async BannedACompany(@Param("companyId",ValidMongoID)companyId:Types.ObjectId)
+{
+const Result = await this.adminService.BannedACompany(companyId)
+if(!Result) throw new InternalServerErrorException("Internal Server Error")
+
+return {message:"Banned succsessfully"}
 }
 
 

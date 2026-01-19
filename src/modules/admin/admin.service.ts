@@ -1,3 +1,4 @@
+import { ConflictException } from '@nestjs/common';
 /* eslint-disable @typescript-eslint/no-unsafe-return */
 import { BadRequestException, InternalServerErrorException, NotFoundException} from '@nestjs/common';
 import { CompanyRepository } from '@Models/Company';
@@ -56,6 +57,38 @@ async AllBannedComapies(page:number,limit:number,companyName?:string)
 {
     const data = await this.companyRepository.AllBannedCompanies(page,limit,companyName)
     return data
+}
+
+async BannedACompany(companyId:Types.ObjectId)
+{
+const compabyExist = await this.companyRepository.FindOne({_id:companyId,isbanned:false})
+if(!compabyExist)throw new NotFoundException("No company Found")
+
+const result = await this.companyRepository.UpdateOne({_id:companyId,isbanned:false},{$set:{isbanned:true}})
+if(!result)throw new InternalServerErrorException("Error Updating")
+
+return true
+}
+
+async UnBannedACompany(companyId: Types.ObjectId)
+ {
+    console.log(companyId)
+    const companyExist = await this.companyRepository.FindOne({ _id: companyId });
+    if (!companyExist) throw new NotFoundException("No company found");
+    if (companyExist.isbanned === false) throw new ConflictException("Company is already unbanned");
+
+
+    const result = await this.companyRepository.UpdateOne({ _id: companyId, isbanned: true },{ $set: { isbanned: false }, $unset: { bannedAt: "" } } );
+    if(!result) throw new InternalServerErrorException("Error Updating")
+
+    return true;
+}
+
+async AllAppovedComapnies(page:number,limit:number)
+{
+const Data = await this.companyRepository.ApprovedCompanies(page,limit)
+
+return Data
 }
 
 }

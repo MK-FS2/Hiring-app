@@ -93,7 +93,8 @@ return true
 
 async RevokePermtions(permissionDTO:RevokePermissionDTO,companyId:Types.ObjectId) 
 {
-const hr = await this.hrRepository.FindOne({companyId:companyId,_id:permissionDTO.hrId},{permissions:1})
+const HRId = new Types.ObjectId(permissionDTO.hrId) 
+const hr = await this.hrRepository.FindOne({companyId:companyId,_id:HRId},{permissions:1})
 if(!hr)
 {
     throw new NotFoundException("No Hr found")

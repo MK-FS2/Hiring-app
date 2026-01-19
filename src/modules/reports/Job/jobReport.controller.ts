@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-unsafe-return */
 import { FullGuard, RolesAllowed, UserData } from '@Shared/Decorators';
 import { JopReportsService } from './jobReports.service';
-import { Body, Controller, Get, Param, Query } from '@nestjs/common';
+import { Body, Controller, DefaultValuePipe, Get, Param, ParseIntPipe, Query } from '@nestjs/common';
 import { Types } from 'mongoose';
 import { Roles } from '@Shared/Enums';
 import { ValidMongoID } from '@Shared/Pipes';
@@ -13,8 +13,6 @@ import { JobPerIndustry, JopIntervalDTO, OptionalFilterDTO } from '../dto';
 export class JobReportsController 
 {
 constructor(private readonly jopReportsService:JopReportsService) {}
-
-// JobReport
 
 @RolesAllowed(Roles.Manger)
 @Get("jobInterval")
@@ -60,7 +58,7 @@ return Data
 
 @RolesAllowed(Roles.Manger)
 @Get("jobEngagementMetrics/:jobId")
-async JobEngagementMetrics(@Param("jobId",ValidMongoID)jobId:string,@UserData("companyId")companyId:Types.ObjectId)
+async JobEngagementMetrics(@Param("jobId",ValidMongoID)jobId:Types.ObjectId,@UserData("companyId")companyId:Types.ObjectId)
 {
 const Data = await this.jopReportsService.JobEngagementMetrics(new Types.ObjectId(jobId),companyId)
 return Data
@@ -68,7 +66,7 @@ return Data
 
 @RolesAllowed(Roles.Manger)
 @Get("jobPerformanceScore/:jobId")
-async JobPerformanceScore(@Param("jobId")jobId:string,@UserData("companyId")companyId:Types.ObjectId)
+async JobPerformanceScore(@Param("jobId",ValidMongoID)jobId:Types.ObjectId,@UserData("companyId")companyId:Types.ObjectId)
 {
 const Data = await this.jopReportsService.JobPerformanceScore(new Types.ObjectId(jobId),companyId)
 return Data
@@ -76,7 +74,7 @@ return Data
 
 @RolesAllowed(Roles.Manger)
 @Get("jobWorkplaceTypeComparison/:jobId")
-async JobWorkplaceTypeComparison(@Param("jobId")jobId:string,@UserData("companyId")companyId:Types.ObjectId)
+async JobWorkplaceTypeComparison(@Param("jobId",ValidMongoID)jobId:Types.ObjectId,@UserData("companyId")companyId:Types.ObjectId)
 {
 const Data = await this.jopReportsService.JobWorkplaceTypeComparison(new Types.ObjectId(jobId),companyId)
 return Data
@@ -84,7 +82,7 @@ return Data
 
 @RolesAllowed(Roles.Manger)
 @Get("jobTimeSeries/:jobId")
-async JobTimeSeries(@Param("jobId")jobId:string,@UserData("companyId")companyId:Types.ObjectId)
+async JobTimeSeries(@Param("jobId",ValidMongoID)jobId:Types.ObjectId,@UserData("companyId")companyId:Types.ObjectId)
 {
 const Data = await this.jopReportsService.JobTimeSeries(new Types.ObjectId(jobId),companyId)
 return Data
@@ -92,7 +90,7 @@ return Data
 
 @RolesAllowed(Roles.Manger)
 @Get("jobIndustryRanking/:jobId")
-async JobIndustryRanking(@Param("jobId")jobId:string,@UserData("companyId")companyId:Types.ObjectId)
+async JobIndustryRanking(@Param("jobId",ValidMongoID)jobId:Types.ObjectId,@UserData("companyId")companyId:Types.ObjectId)
 {
 const Data = await this.jopReportsService.JobIndustryRanking(new Types.ObjectId(jobId),companyId)
 return Data
@@ -110,10 +108,9 @@ return Data
 
 @RolesAllowed(Roles.Manger)
 @Get("topPerformingJobs")
-async TopPerformingJobs(@Query("limit")limit:string,@UserData("companyId")companyId:Types.ObjectId)
+async TopPerformingJobs(@Query("limit",new DefaultValuePipe(10),ParseIntPipe)limit:number,@UserData("companyId")companyId:Types.ObjectId)
 {
-const limitNumber = limit ? parseInt(limit) : 10
-const Data = await this.jopReportsService.TopPerformingJobs(companyId,limitNumber)
+const Data = await this.jopReportsService.TopPerformingJobs(companyId,limit)
 return Data
 }
 

@@ -96,5 +96,49 @@ const companies = await this.CompanyModel.aggregate([
 return companies
 }
 
+async ApprovedCompanies(page: number, limit: number) {
+    const skip = Math.ceil((page - 1) * limit);
 
+    const data = await this.CompanyModel.aggregate([
+        { $match: { approvedByAdmin: true } },
+        {
+            $facet: {
+                companies: [
+                    { $sort: { createdAt: 1 } },
+                    { $skip: skip },
+                    { $limit: limit },
+                    {
+                        $project: {
+                            __v: 0,
+                            companycodes: 0,
+                            updatedAt: 0,
+                            Hrs: 0,
+                            "logo._id": 0,
+                            "coverPic._id": 0,
+                            "logo.ID": 0,
+                            "coverPic.ID": 0,
+                            "legalDocuments._id": 0,
+                            "legalDocuments.ID": 0,
+                        },
+                    },
+                ],
+                metadata: [
+                    {
+                        $group: {
+                            _id: null,
+                            totalApprovedCompanies: {
+                                $sum: {
+                                    $cond: [{ $eq: ["$approvedByAdmin", true] }, 1, 0],
+                                },
+                            },
+                        },
+                    },
+                    { $project: { _id: 0 } },
+                ],
+            },
+        },
+    ]);
+
+    return data;
+}
 }

@@ -1,6 +1,6 @@
 import { CompanyFactory } from './factory/index';
 import { Types } from 'mongoose';
-import { Body, Controller, Get, InternalServerErrorException, Post, Put, Query, UseInterceptors} from '@nestjs/common';
+import { Body, Controller, DefaultValuePipe, Get, InternalServerErrorException, ParseIntPipe, Post, Put, Query, UseInterceptors} from '@nestjs/common';
 import { CompanyService } from './company.service';
 import { FileData, FullGuard, RolesAllowed, UserData } from '@Shared/Decorators';
 import { CompanyImageFlag, Filecount, Roles } from '@Shared/Enums';
@@ -65,7 +65,7 @@ return Data
 
 @RolesAllowed(Roles.HR)
 @Get("allJobsUnderReview")
-async GetAllJobsUnderReview(@UserData("companyId")companyId:Types.ObjectId,@UserData("Role")role:Roles,@Query("page")page:number=1,@Query("limit")limit:number=10)
+async GetAllJobsUnderReview(@UserData("companyId")companyId:Types.ObjectId,@UserData("Role")role:Roles,@Query("page",new DefaultValuePipe(1),ParseIntPipe)page:number,@Query("limit",new DefaultValuePipe(10),ParseIntPipe)limit:number)
 {
 const Data = await this.companyService.GetAllJobsUnderReview(companyId,role,page,limit)
 return Data
@@ -73,7 +73,7 @@ return Data
 
 @RolesAllowed(Roles.HR)
 @Get("allActiveJobs")
-async GetActiveJobs(@UserData("companyId")companyId:Types.ObjectId,@Query("page")page:number=1,@Query("limit")limit:number=10)
+async GetActiveJobs(@UserData("companyId")companyId:Types.ObjectId,@Query("page",new DefaultValuePipe(1),ParseIntPipe)page:number,@Query("limit",new DefaultValuePipe(10),ParseIntPipe)limit:number)
 {
 const Data = await this.companyService.GetAllActiveJobs(companyId,page,limit)
 return Data
