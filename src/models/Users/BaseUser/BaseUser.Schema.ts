@@ -6,8 +6,7 @@ import { Types } from "mongoose";
 import * as bcrypt from 'bcrypt';
 import CryptoJS from "crypto-js";
 import { InternalServerErrorException } from "@nestjs/common";
-import dotenv from "dotenv"
-dotenv.config()
+import 'dotenv/config'
 
 
 @Schema({timestamps:false})
