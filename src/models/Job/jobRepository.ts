@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unsafe-argument */
 import AbstractRepository from "@Models/AbstractRepository";
 import { Job } from "./jobSchema";
 import { InjectModel } from "@nestjs/mongoose";
@@ -15,42 +14,17 @@ export class JobRepository extends AbstractRepository<Job> {
   }
 
 
-  async ApplicantJobsDefault(applicantIndustry: IndustriesFeilds, applicantCarerLevel: CarerExperienceLevels, queryParameters: JobQueryParameters) {
+ async ApplicantJobsDefault(applicantIndustry: IndustriesFeilds, applicantCarerLevel: CarerExperienceLevels, queryParameters: JobQueryParameters) {
     const { page, limit, jobTitle, experienceLevel, maxYear, minYear, city, country, workplaceType, minSalary, maxSalary } = queryParameters;
     const skip = (page - 1) * limit;
 
-    console.log(queryParameters)
-    const projection = {
-      requirements: 0,
-      description: 0,
-      currency: 0,
-      minYears: 0,
-      maxYears: 0,
-      maxSalary: 0,
-      minSalary: 0,
-      city: 0,
-      country: 0,
-      createdBy: 0,
-      updatedBy: 0,
-      createdAt: 0,
-      isActive: 0,
-      status: 0,
-      mangerAlert: 0,
-      hrAlert: 0,
-      hrAlertNote: 0,
-      __v: 0
-    };
-
-    const options = { skip, limit, populate: { path: "companyId", select: "companyname _id logo.URL" } };
-
-    const filters: any =
+    const filters: any = 
     {
       isActive: true,
       status: JobStatus.Open,
       industry: applicantIndustry,
       experienceLevel: applicantCarerLevel
     };
-
 
     if (jobTitle) filters.title = { $regex: jobTitle, $options: "i" };
     if (experienceLevel) filters.experienceLevel = experienceLevel;
@@ -59,14 +33,62 @@ export class JobRepository extends AbstractRepository<Job> {
     if (city) filters.city = { $regex: city, $options: "i" };
     if (country) filters.country = { $regex: country, $options: "i" };
     if (workplaceType) filters.workplaceType = workplaceType;
-    if (minSalary != undefined) filters.minSalary = { $lte: minSalary };
-    if (maxSalary != undefined) filters.maxSalary = { $gte: maxSalary };
+    if (minSalary !== undefined) filters.maxSalary = { $gte: minSalary };
+    if (maxSalary !== undefined) filters.minSalary = { $lte: maxSalary };
 
+    const result = await this.JobModel.aggregate([
+      {
+        $match: filters
+      },
+      {
+        $facet: {
+          metadata: [
+            { $count: "total" },
+            { 
+              $addFields: { 
+                page,
+                limit,
+                totalPages: { $ceil: { $divide: ["$total", limit] } }
+              } 
+            }
+          ],
+          jobs: [
+            { $skip: skip },
+            { $limit: limit },
+            {
+              $lookup: {
+                from: "companies", // Change to your actual collection name
+                localField: "companyId",
+                foreignField: "_id",
+                as: "companyId"
+              }
+            },
+            { $unwind: "$companyId" },
+            {
+              $project: {
+                // Use INCLUSION (only list what you want)
+                _id: 1,
+                title: 1,
+                industry: 1,
+                experienceLevel: 1,
+                workplaceType: 1,
+                updatedAt: 1,
+                // Add any other fields you want to return
+                "companyId.companyname": 1,
+                "companyId._id": 1,
+                "companyId.logo.URL": 1
+              }
+            }
+          ]
+        }
+      }
+    ]);
 
-    const jobs = await this.Find(filters, projection, options)
-    return jobs || [];
-  }
-
+    return {
+      jobs: result[0]?.jobs || [],
+      metadata: result[0]?.metadata[0] || { total: 0, page, limit, totalPages: 0 }
+    };
+}
 
   async AllJobsWithApplications(companyId: Types.ObjectId, page: number, limit: number) {
     const skip = (page - 1) * limit;
@@ -127,20 +149,20 @@ export class JobRepository extends AbstractRepository<Job> {
             completionRate:
             {
               $cond: [
-                { $eq: ["$ApplicationsCount",0] },
+                { $eq: ["$ApplicationsCount", 0] },
                 0,
                 {
-                  $round: 
-                  [
-                    {
-                      $multiply: 
-                      [
-                        { $divide: ["$completedApplications", "$ApplicationsCount"] },
-                        100
-                      ]
-                    },
-                    0
-                  ]
+                  $round:
+                    [
+                      {
+                        $multiply:
+                          [
+                            { $divide: ["$completedApplications", "$ApplicationsCount"] },
+                            100
+                          ]
+                      },
+                      0
+                    ]
                 }
               ]
             }

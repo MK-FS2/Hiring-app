@@ -270,7 +270,8 @@ for (const obj of userExist.OTP)
     throw new BadRequestException("OTP timed out");
   }
 
-  const updatingResult = await this.baseUserRepository.UpdateOne({email:resetPasswordDTO.email},{$set:{changedCredentialsAt:new Date(Date.now()),password:resetPasswordDTO.password}})
+  const hashed = bcrypt.hashSync(resetPasswordDTO.password,10)
+  const updatingResult = await this.baseUserRepository.UpdateOne({email:resetPasswordDTO.email},{$set:{changedCredentialsAt:new Date(Date.now()),password:hashed}})
   if(!updatingResult)
   {
     throw new InternalServerErrorException()

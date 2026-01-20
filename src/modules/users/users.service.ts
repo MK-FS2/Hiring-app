@@ -1,5 +1,6 @@
+import { SavedPostsRepository } from '@Models/SavedJobPosts';
 import { ApplicantRepository, BaseUserRepository } from '@Models/Users';
-import { Injectable, NotFoundException, ConflictException, InternalServerErrorException } from '@nestjs/common';
+import { Injectable, NotFoundException, ConflictException, InternalServerErrorException, UnauthorizedException} from '@nestjs/common';
 import { FolderTypes, Roles } from '@Shared/Enums';
 import { CloudServices } from '@Shared/Utils/Cloud';
 import { Types } from 'mongoose';
@@ -11,7 +12,8 @@ export class UsersService
 constructor(
 private readonly baseUserRepository:BaseUserRepository,
 private readonly cloudServices:CloudServices,
-private readonly applicantRepository:ApplicantRepository
+private readonly applicantRepository:ApplicantRepository,
+private readonly savedPostsRepository:SavedPostsRepository
 ){}
 
 
@@ -96,6 +98,29 @@ async UpdateUserData(constructedUser:UpdateUserEntity,userId:Types.ObjectId,user
         throw new InternalServerErrorException("Error Updating")
     }
     return true
+}
+
+async DeleteApplicantAccount(userId:Types.ObjectId,role:Roles)
+{
+if(role != Roles.Applicant)throw new UnauthorizedException('Only Applicants can delet there Account')
+const userExist = await this.baseUserRepository.Exist({_id:userId})
+if(!userExist)throw new NotFoundException("NoUserFound")
+
+
+ const [r1,r2] =await Promise.all(
+ [
+ this.baseUserRepository.DeleteOne({_id:userId}),
+ this.savedPostsRepository.DeleteMany({userId:userId})
+ ])
+
+if(!r1)throw new InternalServerErrorException("Error Deleting")
+if(!r2)throw new InternalServerErrorException("Error Deleting")
+
+
+ const folder = `${FolderTypes.App}/${FolderTypes.Users}/${userId.toString()}`
+ await this.cloudServices.deleteFolder(folder)
+ 
+return true
 }
 
 }

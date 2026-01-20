@@ -1,10 +1,10 @@
 import { UserFactory } from './factory/index';
-import { BadGatewayException, Body, Controller, Get, InternalServerErrorException, Param, Put, UseGuards, UseInterceptors } from '@nestjs/common';
+import { BadGatewayException, Body, Controller, Delete, Get, InternalServerErrorException, Param, Put, UseGuards, UseInterceptors } from '@nestjs/common';
 import { UsersService } from './users.service';
 import { ValidMongoID } from '@Shared/Pipes';
 import { Types } from 'mongoose';
-import { AuthGuard } from '@Shared/Guards';
-import { FileData, UserData } from '@Shared/Decorators';
+import { AuthGuard, RoleGuard } from '@Shared/Guards';
+import { FileData, RolesAllowed, UserData } from '@Shared/Decorators';
 import { FilesInterceptor } from '@Shared/Interceptors';
 import { FileTypes } from '@Shared/Helpers';
 import { Filecount, Roles } from '@Shared/Enums';
@@ -64,6 +64,16 @@ const constructedUser = this.userFactory.updateUser(updatUserDTO,userRole)
 const Result = await this.usersService.UpdateUserData(constructedUser,userId,userRole)
 if(!Result) throw new InternalServerErrorException("Internal Server Error")
 return {message:"Updated Successfully",status:200}
+}
+
+@RolesAllowed(Roles.Applicant)
+@UseGuards(RoleGuard)
+@Delete("deleteAccount")
+async DeletApplicant(@UserData("_id")userId:Types.ObjectId,@UserData("Role")role:Roles)
+{
+const Result = await this.usersService.DeleteApplicantAccount(userId,role)
+if(!Result) throw new InternalServerErrorException("Internal Server Error")
+return {message:"Deleted Successfully",status:200}
 }
 
 }
