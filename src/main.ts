@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-floating-promises */
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
-import { ConfigService } from '@nestjs/config';
+// import { ConfigService } from '@nestjs/config';
 import { ValidationPipe } from '@nestjs/common';
 import { CustomException } from '@Shared/Filters';
 
@@ -24,8 +24,8 @@ async function bootstrap() {
     credentials: false,
   });
 
-  const config = app.get(ConfigService);
-  const port = Number(process.env.PORT) || Number(config.get('port')) || 5000;
+  // const config = app.get(ConfigService);
+  const port = Number(process.env.PORT);
 
   await app.listen(port, '0.0.0.0');
   console.log(`Server is running on port ${port}`);
